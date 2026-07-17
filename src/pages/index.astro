@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/home/Hero.astro';
-import ProductProof from '../components/home/ProductProof.astro';
 import CapabilityLayers from '../components/home/CapabilityLayers.astro';
 import EksEvidence from '../components/home/EksEvidence.astro';
 import HowItWorks from '../components/home/HowItWorks.astro';
@@ -13,9 +12,8 @@ import FinalCta from '../components/home/FinalCta.astro';
 import { site } from '../content/site';
 ---
 
-<BaseLayout title={site.name} description={site.description}>
+<BaseLayout title="Kubernetes upgrade readiness and EKS rollback evidence" description={site.description}>
   <Hero />
-  <ProductProof />
   <CapabilityLayers />
   <EksEvidence />
   <HowItWorks />

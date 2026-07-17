@@ -2,6 +2,8 @@
 dist/
 # generated types
 .astro/
+# local audit output
+lighthouse-reports/
 
 # dependencies
 node_modules/

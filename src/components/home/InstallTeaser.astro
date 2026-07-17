@@ -4,8 +4,8 @@ import Section from '../layout/Section.astro';
 import CodeBlock from '../ui/CodeBlock.astro';
 import Button from '../ui/Button.astro';
 
-const installCode = `$ curl -sSL https://kubepreflight.com/install.sh | sh
-$ kubepreflight scan --context <your-context> --target 1.32`;
+const installCode = `# after installing (see options below)
+$ kubepreflight scan --context <your-context> --target-version 1.32`;
 ---
 
 <Section tone="ink">

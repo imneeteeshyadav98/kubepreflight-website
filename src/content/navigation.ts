@@ -1,3 +1,5 @@
+import { site } from './site';
+
 export interface NavItem {
   readonly label: string;
   readonly href: string;
@@ -35,8 +37,9 @@ export const footerColumns: readonly FooterColumn[] = [
     heading: 'Repository',
     items: [
       { label: 'Source & docs', href: 'https://github.com/imneeteeshyadav98/kubepreflight', external: true },
-      { label: 'Releases', href: 'https://github.com/imneeteeshyadav98/kubepreflight/releases', external: true },
-      { label: 'Issues', href: 'https://github.com/imneeteeshyadav98/kubepreflight/issues', external: true }
+      { label: 'Releases', href: site.releasesUrl, external: true },
+      { label: 'Issues', href: site.issuesUrl, external: true },
+      { label: 'License (Apache-2.0)', href: site.licenseUrl, external: true }
     ]
   }
 ];

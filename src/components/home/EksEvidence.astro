@@ -16,11 +16,13 @@ const stats = [
   <Container>
     <div class="grid grid-cols-1 gap-16 md:grid-cols-12">
       <div class="md:col-span-5">
-        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Real EKS evidence</span>
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Not a linter. A readiness signal.</span>
         <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">EKS 1.31 → 1.32, v0.14.0.</h2>
         <p class="mt-4 leading-relaxed text-text-muted">
-          One real cluster upgrade, evaluated end to end. Readiness moved from a hard block to a
-          documented decision — with the rollback path checked before anything changed.
+          Every run produces a comparable readiness score, a list of resolved and new blockers, and
+          an explicit recommendation — evidence you can attach to a change ticket, not a pass/fail
+          guess. Here's one real upgrade, evaluated end to end: readiness moved from a hard block to
+          a documented decision, with the rollback path checked before anything changed.
         </p>
         <Button href="/case-study/eks-1-31-to-1-32" variant="secondary" class="mt-8">
           Read the full case study

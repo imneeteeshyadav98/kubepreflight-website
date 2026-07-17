@@ -3,6 +3,7 @@ import Container from '../layout/Container.astro';
 import Section from '../layout/Section.astro';
 import CodeBlock from '../ui/CodeBlock.astro';
 import IconLink from '../ui/IconLink.astro';
+import { site } from '../../content/site';
 
 const without = [
   'Upgrade risk discovered after merge, not before',
@@ -16,11 +17,11 @@ const withGate = [
   'Score, blockers, and recommendation posted on the check'
 ];
 
-const actionYaml = `- name: KubePreflight readiness gate
-  uses: imneeteeshyadav98/kubepreflight-action@v1
+const actionYaml = `- uses: imneeteeshyadav98/kubepreflight/compare@${site.currentVersion}
   with:
-    target-version: "1.32"
-    fail-on: regression`;
+    baseline: baseline-findings.json
+    current: current-findings.json
+    fail-on-new-blockers: 'true'`;
 ---
 
 <Section tone="ink">
