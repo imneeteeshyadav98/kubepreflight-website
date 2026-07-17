@@ -1,0 +1,33 @@
+---
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'md' | 'sm';
+  external?: boolean;
+  class?: string;
+}
+
+const { href, variant = 'primary', size = 'md', external = false, class: className = '' } = Astro.props;
+
+const base = 'inline-flex items-center justify-center gap-2 font-medium rounded-[var(--radius-sm)] border transition-colors duration-150';
+
+const variants: Record<NonNullable<Props['variant']>, string> = {
+  primary: 'bg-signal text-ink-950 border-signal hover:bg-[#2ebd8a]',
+  secondary: 'bg-transparent text-text-primary border-border-strong hover:border-signal hover:text-signal',
+  ghost: 'bg-transparent text-text-muted border-transparent hover:text-text-primary'
+};
+
+const sizes: Record<NonNullable<Props['size']>, string> = {
+  md: 'px-5 py-2.5 text-sm',
+  sm: 'px-3.5 py-1.5 text-xs'
+};
+
+const classes = [base, variants[variant], sizes[size], className].join(' ');
+
+const Tag = href ? 'a' : 'button';
+const linkAttrs = href && external ? { target: '_blank', rel: 'noreferrer noopener' } : {};
+---
+
+<Tag class={classes} href={href} {...linkAttrs}>
+  <slot />
+</Tag>

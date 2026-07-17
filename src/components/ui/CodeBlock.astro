@@ -1,0 +1,39 @@
+---
+// Renders pre-formatted command/output text as framed "product evidence."
+// Lines starting with "$ " are treated as prompts, "#" as comments — both
+// styled at build time, no client JS or syntax-highlighter dependency.
+interface Props {
+  title?: string;
+  code: string;
+  class?: string;
+}
+
+const { title, code, class: className = '' } = Astro.props;
+
+const lines = code.replace(/^\n/, '').replace(/\n$/, '').split('\n');
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+const highlighted = lines
+  .map((line) => {
+    const isPrompt = line.startsWith('$ ');
+    const isComment = line.trimStart().startsWith('#');
+    const cls = isPrompt ? 'text-signal' : isComment ? 'text-text-muted' : 'text-text-primary';
+    return `<span class="${cls}">${escapeHtml(line)}</span>`;
+  })
+  .join('\n');
+---
+
+<div class={`overflow-hidden rounded-[var(--radius-md)] border border-border bg-ink-900 ${className}`}>
+  {
+    title && (
+      <div class="flex items-center gap-2 border-b border-border px-4 py-2.5">
+        <span class="h-2 w-2 rounded-full bg-border-strong" aria-hidden="true" />
+        <span class="font-mono text-xs text-text-muted">{title}</span>
+      </div>
+    )
+  }
+  <pre class="overflow-x-auto px-4 py-4 text-[13px] leading-relaxed"><code class="font-mono" set:html={highlighted} /></pre>
+</div>

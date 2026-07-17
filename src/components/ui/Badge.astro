@@ -1,0 +1,25 @@
+---
+interface Props {
+  tone?: 'signal' | 'blue' | 'amber' | 'neutral';
+  class?: string;
+}
+
+const { tone = 'neutral', class: className = '' } = Astro.props;
+
+const tones: Record<NonNullable<Props['tone']>, string> = {
+  signal: 'text-signal border-signal-dim bg-signal/10',
+  blue: 'text-blue border-blue-dim bg-blue/10',
+  amber: 'text-amber border-amber-dim bg-amber/10',
+  neutral: 'text-text-muted border-border-strong bg-transparent'
+};
+
+const classes = [
+  'inline-flex items-center gap-1.5 rounded-[var(--radius-xs)] border px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide',
+  tones[tone],
+  className
+].join(' ');
+---
+
+<span class={classes}>
+  <slot />
+</span>

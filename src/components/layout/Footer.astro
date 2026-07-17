@@ -1,0 +1,49 @@
+---
+import Container from './Container.astro';
+import Logo from '../brand/Logo.astro';
+import { footerColumns } from '../../content/navigation';
+import { site } from '../../content/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-border bg-ink-950">
+  <Container class="py-16">
+    <div class="grid grid-cols-1 gap-12 md:grid-cols-12">
+      <div class="md:col-span-4">
+        <Logo />
+        <p class="mt-4 max-w-xs text-sm leading-relaxed text-text-muted">
+          {site.description}
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-8">
+        {
+          footerColumns.map((column) => (
+            <div>
+              <h3 class="font-mono text-xs uppercase tracking-wide text-text-muted">{column.heading}</h3>
+              <ul class="mt-4 flex flex-col gap-3">
+                {column.items.map((item) => (
+                  <li>
+                    <a
+                      href={item.href}
+                      class="text-sm text-text-primary/90 hover:text-signal transition-colors duration-150"
+                      {...(item.external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="mt-16 flex flex-col gap-4 border-t border-border pt-8 text-xs text-text-muted sm:flex-row sm:items-center sm:justify-between">
+      <p>&copy; {year} KubePreflight. Source available on GitHub.</p>
+      <p class="font-mono">Static build &middot; No tracking scripts</p>
+    </div>
+  </Container>
+</footer>
