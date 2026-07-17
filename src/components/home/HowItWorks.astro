@@ -1,0 +1,53 @@
+---
+import Container from '../layout/Container.astro';
+import Section from '../layout/Section.astro';
+
+const steps = [
+  {
+    index: '01',
+    title: 'Point at a cluster',
+    description: 'Provide cluster access or a manifest directory — no agents, no persistent access required.'
+  },
+  {
+    index: '02',
+    title: 'Run a scan',
+    description: 'KubePreflight inventories workloads and checks them against the target Kubernetes version.'
+  },
+  {
+    index: '03',
+    title: 'Compare versions',
+    description: 'Baseline and target are scored side by side, with every regression and resolution listed.'
+  },
+  {
+    index: '04',
+    title: 'Get a decision',
+    description: 'One recommendation — proceed, proceed with caution, or do not proceed — backed by the evidence.'
+  }
+];
+---
+
+<Section tone="ink-raised">
+  <Container>
+    <div class="max-w-2xl">
+      <span class="font-mono text-xs uppercase tracking-wide text-text-muted">How it works</span>
+      <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">From cluster to decision, in four steps.</h2>
+    </div>
+
+    <div class="relative mt-14">
+      <div class="absolute left-0 right-0 top-[13px] hidden h-px bg-border md:block" aria-hidden="true"></div>
+      <ol class="relative grid grid-cols-1 gap-10 md:grid-cols-4">
+        {
+          steps.map((step) => (
+            <li>
+              <span class="relative z-10 mb-4 flex h-[26px] w-[26px] items-center justify-center rounded-full border border-signal bg-ink-950 font-mono text-xs text-signal">
+                {step.index}
+              </span>
+              <h3 class="text-base font-medium text-text-primary">{step.title}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-text-muted">{step.description}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </Container>
+</Section>

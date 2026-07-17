@@ -1,0 +1,53 @@
+---
+import Container from '../layout/Container.astro';
+import Section from '../layout/Section.astro';
+import Meter from '../ui/Meter.astro';
+import Badge from '../ui/Badge.astro';
+import Button from '../ui/Button.astro';
+
+const stats = [
+  { label: 'Findings resolved', value: '9' },
+  { label: 'Blockers resolved', value: '6' },
+  { label: 'New blockers', value: '0' }
+];
+---
+
+<Section tone="ink">
+  <Container>
+    <div class="grid grid-cols-1 gap-16 md:grid-cols-12">
+      <div class="md:col-span-5">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Real EKS evidence</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">EKS 1.31 → 1.32, v0.14.0.</h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          One real cluster upgrade, evaluated end to end. Readiness moved from a hard block to a
+          documented decision — with the rollback path checked before anything changed.
+        </p>
+        <Button href="/case-study/eks-1-31-to-1-32" variant="secondary" class="mt-8">
+          Read the full case study
+        </Button>
+      </div>
+
+      <div class="md:col-span-7">
+        <div class="rounded-[var(--radius-md)] border border-border bg-ink-900 p-8">
+          <Meter label="Readiness score" value={57} baseline={19} tone="signal" />
+
+          <div class="mt-8 grid grid-cols-3 gap-6 border-t border-border pt-8">
+            {
+              stats.map((stat) => (
+                <div>
+                  <div class="font-mono text-2xl text-text-primary">{stat.value}</div>
+                  <div class="mt-1 text-xs text-text-muted">{stat.label}</div>
+                </div>
+              ))
+            }
+          </div>
+
+          <div class="mt-8 flex flex-wrap items-center gap-3 border-t border-border pt-8">
+            <Badge tone="signal">Rollback eligible</Badge>
+            <Badge tone="amber">Recommendation: do_not_proceed</Badge>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Container>
+</Section>

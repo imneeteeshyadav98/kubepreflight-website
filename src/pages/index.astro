@@ -2,10 +2,26 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/home/Hero.astro';
 import ProductProof from '../components/home/ProductProof.astro';
+import CapabilityLayers from '../components/home/CapabilityLayers.astro';
+import EksEvidence from '../components/home/EksEvidence.astro';
+import HowItWorks from '../components/home/HowItWorks.astro';
+import TerminalWorkflow from '../components/home/TerminalWorkflow.astro';
+import CiGate from '../components/home/CiGate.astro';
+import InstallTeaser from '../components/home/InstallTeaser.astro';
+import TrustLimitations from '../components/home/TrustLimitations.astro';
+import FinalCta from '../components/home/FinalCta.astro';
 import { site } from '../content/site';
 ---
 
 <BaseLayout title={site.name} description={site.description}>
   <Hero />
   <ProductProof />
+  <CapabilityLayers />
+  <EksEvidence />
+  <HowItWorks />
+  <TerminalWorkflow />
+  <CiGate />
+  <InstallTeaser />
+  <TrustLimitations />
+  <FinalCta />
 </BaseLayout>

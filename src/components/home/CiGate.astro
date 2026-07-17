@@ -1,0 +1,73 @@
+---
+import Container from '../layout/Container.astro';
+import Section from '../layout/Section.astro';
+import CodeBlock from '../ui/CodeBlock.astro';
+import IconLink from '../ui/IconLink.astro';
+
+const without = [
+  'Upgrade risk discovered after merge, not before',
+  'Rollback eligibility checked manually, under pressure',
+  'Readiness lives in tribal memory, not the pipeline'
+];
+
+const withGate = [
+  'Readiness score computed on every pull request',
+  'Merges blocked automatically when readiness regresses',
+  'Score, blockers, and recommendation posted on the check'
+];
+
+const actionYaml = `- name: KubePreflight readiness gate
+  uses: imneeteeshyadav98/kubepreflight-action@v1
+  with:
+    target-version: "1.32"
+    fail-on: regression`;
+---
+
+<Section tone="ink">
+  <Container>
+    <div class="max-w-2xl">
+      <span class="font-mono text-xs uppercase tracking-wide text-text-muted">CI regression gate</span>
+      <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Readiness, checked before it merges.</h2>
+    </div>
+
+    <div class="mt-14 grid grid-cols-1 gap-8 md:grid-cols-2">
+      <div class="rounded-[var(--radius-md)] border border-border p-8">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Without a gate</span>
+        <ul class="mt-5 flex flex-col gap-4">
+          {
+            without.map((item) => (
+              <li class="flex gap-3 text-sm leading-relaxed text-text-muted">
+                <span class="mt-0.5 text-amber" aria-hidden="true">
+                  ×
+                </span>
+                {item}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div class="rounded-[var(--radius-md)] border border-signal-dim bg-signal/5 p-8">
+        <span class="font-mono text-xs uppercase tracking-wide text-signal">With KubePreflight</span>
+        <ul class="mt-5 flex flex-col gap-4">
+          {
+            withGate.map((item) => (
+              <li class="flex gap-3 text-sm leading-relaxed text-text-primary">
+                <span class="mt-0.5 text-signal" aria-hidden="true">
+                  ✓
+                </span>
+                {item}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <CodeBlock title=".github/workflows/upgrade-readiness.yml" code={actionYaml} />
+      <IconLink href="/github-action" class="mt-4">
+        View the full GitHub Action reference
+      </IconLink>
+    </div>
+  </Container>
+</Section>
