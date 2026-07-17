@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Container from '../components/layout/Container.astro';
 import Button from '../components/ui/Button.astro';
 import Badge from '../components/ui/Badge.astro';
+import { site } from '../content/site';
 ---
 
 <BaseLayout title="Page not found" description="This page does not exist." noindex>
@@ -14,7 +15,7 @@ import Badge from '../components/ui/Badge.astro';
     </p>
     <div class="mt-8 flex flex-wrap items-center gap-4">
       <Button href="/">Back to homepage</Button>
-      <Button href="/install" variant="secondary">Install KubePreflight</Button>
+      <Button href={site.installDocsUrl} external variant="secondary">Install KubePreflight</Button>
     </div>
   </Container>
 </BaseLayout>
