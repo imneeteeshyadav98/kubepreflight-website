@@ -1,0 +1,25 @@
+---
+interface Props {
+  id?: string;
+  tone?: 'ink' | 'ink-raised' | 'paper';
+  spacing?: 'md' | 'lg';
+  class?: string;
+}
+
+const { id, tone = 'ink', spacing = 'lg', class: className = '' } = Astro.props;
+
+const tones: Record<NonNullable<Props['tone']>, string> = {
+  ink: 'bg-ink-950 text-text-primary',
+  'ink-raised': 'bg-ink-900 text-text-primary',
+  paper: 'light-section'
+};
+
+const spacings: Record<NonNullable<Props['spacing']>, string> = {
+  md: 'py-16 md:py-20',
+  lg: 'py-20 md:py-28'
+};
+---
+
+<section id={id} class={`border-b border-border ${tones[tone]} ${spacings[spacing]} ${className}`}>
+  <slot />
+</section>

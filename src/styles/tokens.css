@@ -1,0 +1,50 @@
+/*
+  Design tokens for KubePreflight — "Operational Intelligence".
+  Raw values live here as CSS custom properties; global.css maps them
+  into Tailwind's theme via @theme so they're usable as utilities
+  (bg-ink-950, text-signal, font-mono, etc).
+*/
+
+:root {
+  /* Surfaces */
+  --color-ink-950: #071019;
+  --color-ink-900: #0b1722;
+  --color-ink-800: #112231;
+  --color-ink-700: #1a2f40;
+  --color-paper: #f6f8f7;
+  --color-paper-dim: #eceef0;
+
+  /* Text */
+  --color-text-primary: #f2f7f5;
+  --color-text-dark: #101820;
+  --color-text-muted: #91a3ae;
+  --color-text-muted-dark: #4b5b64;
+
+  /* Accents */
+  --color-signal: #36d399;
+  --color-signal-dim: #1f7a58;
+  --color-blue: #5aa7ff;
+  --color-blue-dim: #2e5a94;
+  --color-amber: #f4b860;
+  --color-amber-dim: #8a6428;
+
+  /* Borders */
+  --color-border: rgba(164, 190, 202, 0.16);
+  --color-border-strong: rgba(164, 190, 202, 0.32);
+  --color-border-dark: rgba(16, 24, 32, 0.12);
+
+  /* Typography */
+  --font-editorial: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', Consolas, 'Liberation Mono', Menlo, monospace;
+
+  /* Radius — restrained, mostly square */
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 120ms;
+  --duration-base: 220ms;
+}

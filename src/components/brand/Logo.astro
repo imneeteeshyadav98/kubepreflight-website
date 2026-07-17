@@ -1,0 +1,22 @@
+---
+interface Props {
+  class?: string;
+  wordmark?: boolean;
+}
+
+const { class: className = '', wordmark = true } = Astro.props;
+---
+
+<a href="/" class={`inline-flex items-center gap-2.5 ${className}`} aria-label="KubePreflight home">
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+    <rect x="0.75" y="0.75" width="20.5" height="20.5" rx="3" stroke="currentColor" stroke-opacity="0.3" />
+    <path d="M6 11.5 9.5 15l6.5-8" stroke="#36d399" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+  {
+    wordmark && (
+      <span class="font-mono text-[15px] tracking-tight text-text-primary">
+        kube<span class="text-signal">preflight</span>
+      </span>
+    )
+  }
+</a>

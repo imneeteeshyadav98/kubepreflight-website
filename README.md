@@ -1,44 +1,67 @@
-# Astro Starter Kit: Minimal
+# kubepreflight-website
 
-```sh
-npm create astro@latest -- --template minimal
+Marketing and evidence site for [KubePreflight](https://github.com/imneeteeshyadav98/kubepreflight). Detailed technical documentation lives in the core repository; this site summarizes the product and routes visitors there.
+
+## Stack
+
+- [Astro](https://astro.build) — static output, minimal client JavaScript
+- Tailwind CSS 4 (via `@tailwindcss/vite`), with design tokens in [`src/styles/tokens.css`](src/styles/tokens.css)
+- TypeScript, strict mode
+- `@astrojs/sitemap` for sitemap generation
+
+## Requirements
+
+- Node.js `>=22.12.0` (Astro 5+ requirement)
+
+If you're on an older default Node via `nvm`, switch before installing or running anything:
+
+```bash
+source ~/.nvm/nvm.sh
+nvm use 22
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Development
 
-## 🚀 Project Structure
+```bash
+npm install
+npm run dev
+```
 
-Inside of your Astro project, you'll see the following folders and files:
+Site runs at `http://localhost:4321`.
+
+## Scripts
+
+| Command           | Action                                                 |
+| :----------------- | :------------------------------------------------------ |
+| `npm run dev`      | Start the local dev server                              |
+| `npm run check`    | Type-check `.astro`/`.ts` files (`astro check`)          |
+| `npm run build`    | Type-check, then build the production site to `dist/`   |
+| `npm run preview`  | Preview the production build locally                     |
+
+`astro build` alone does **not** type-check `.astro` files — `npm run build` always runs `astro check` first, and CI runs both steps explicitly.
+
+## Project structure
 
 ```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+src/
+├── components/
+│   ├── brand/       # Logo
+│   ├── layout/      # Header, Footer, Container, Section
+│   ├── ui/          # Button, Badge, IconLink, CodeBlock
+│   ├── seo/         # SEO metadata component
+│   └── home/        # Homepage-specific sections
+├── content/         # Typed site copy and navigation data
+├── layouts/         # BaseLayout
+├── pages/           # File-based routes
+└── styles/          # tokens.css (design tokens) + global.css (Tailwind + base styles)
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Design system
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+The visual direction is "operational intelligence": deep ink/graphite surfaces, warm off-white light sections, restrained signal-green and electric-blue accents, editorial serif headings, and monospace engineering details. Tokens are defined once in `src/styles/tokens.css` and exposed to Tailwind utilities via `@theme inline` in `src/styles/global.css` — change a value there, not in components.
 
-Any static assets, like images, can be placed in the `public/` directory.
+Headings and mono text use system font stacks (no webfont network requests), which keeps the site fast and avoids third-party font-loading privacy concerns.
 
-## 🧞 Commands
+## Deployment
 
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-# kubepreflight-website
+Static output, deployed to GitHub Pages, served at `kubepreflight.com`. CI (`.github/workflows/ci.yml`) runs `npm run check` and `npm run build` on every push and pull request.
