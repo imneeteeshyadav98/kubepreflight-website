@@ -3,7 +3,7 @@ import Container from '../layout/Container.astro';
 import Section from '../layout/Section.astro';
 
 const lines: { text: string; tone: 'prompt' | 'ok' | 'warn' | 'result' }[] = [
-  { text: '$ kubepreflight scan --context eks-prod --target 1.32', tone: 'prompt' },
+  { text: '$ kubepreflight scan --context eks-prod --target-version 1.32', tone: 'prompt' },
   { text: '✓ collected 142 workload objects', tone: 'ok' },
   { text: '✓ checked deprecated API usage', tone: 'ok' },
   { text: '⚠ 3 blockers found', tone: 'warn' },

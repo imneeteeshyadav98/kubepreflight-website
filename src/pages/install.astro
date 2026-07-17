@@ -36,8 +36,8 @@ kubepreflight --help`;
 
 const gatekeeperFix = `xattr -d com.apple.quarantine /usr/local/bin/kubepreflight`;
 
-const dockerInstall = `docker pull ghcr.io/imneeteeshyadav98/kubepreflight:0.14.0-real-eks-case-study
-docker run --rm ghcr.io/imneeteeshyadav98/kubepreflight:0.14.0-real-eks-case-study --help`;
+const dockerInstall = `docker pull ghcr.io/imneeteeshyadav98/kubepreflight:${site.currentDockerTag}
+docker run --rm ghcr.io/imneeteeshyadav98/kubepreflight:${site.currentDockerTag} --help`;
 
 const checksumVerify = `sha256sum -c kubepreflight_${VERSION}_checksums.txt      # Linux
 shasum -a 256 -c kubepreflight_${VERSION}_checksums.txt  # macOS`;
@@ -193,9 +193,9 @@ const exitCodes = [
           <table class="w-full border-collapse text-left text-sm">
             <thead>
               <tr class="border-b border-border bg-ink-900">
-                <th class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Scan type</th>
-                <th class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Requires</th>
-                <th class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Flag</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Scan type</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Requires</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Flag</th>
               </tr>
             </thead>
             <tbody>

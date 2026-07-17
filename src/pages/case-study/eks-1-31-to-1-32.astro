@@ -20,19 +20,19 @@ const stats = [
 
 const scanScope = ['APIs', 'Webhooks', 'CRDs', 'PodDisruptionBudgets', 'Node compatibility', 'Add-ons', 'Workloads', 'Drain risk'];
 
-const scanCommands = `$ kubepreflight scan --provider eks --cluster-name production --target-version 1.31 --output baseline.json
-$ kubepreflight scan --provider eks --cluster-name production --target-version 1.32 --output findings.json`;
+const scanCommands = `$ kubepreflight scan --provider eks --cluster-name production --target-version 1.31 --findings-out baseline.json
+$ kubepreflight scan --provider eks --cluster-name production --target-version 1.32 --findings-out findings.json`;
 
-const decisionCommands = `$ kubepreflight compare --baseline baseline.json --current findings.json
-Readiness score      19 -> 57
-Resolved findings    9
-Resolved blockers    6
-New blockers         0
-Comparison gate       pass
+const decisionCommands = `$ kubepreflight compare --baseline baseline.json --current findings.json --markdown-out comparison.md
+Comparison: BLOCKED -> BLOCKED
+Readiness score: 19 -> 57
+New: 0 (0 blocker(s))  Resolved: 9 (6 blocker(s))  Changed: 0  Unchanged: 38
 
-$ kubepreflight rollback assess --cluster-name production --region ap-south-1
-Rollback eligible     yes
-Recommendation        do_not_proceed`;
+$ kubepreflight rollback assess --cluster-name production --output md
+Eligibility           eligible
+Readiness             blocked
+Recommendation         do_not_proceed
+Confidence             high`;
 ---
 
 <BaseLayout
@@ -90,6 +90,8 @@ Recommendation        do_not_proceed`;
             src={beforeRemediationConsole}
             alt="KubePreflight upgrade readiness report showing a BLOCKED, NO-GO verdict at a readiness score of 19 out of 100, with 7 blockers and 11 warnings, before remediation."
             class="w-full"
+            width={1440}
+            height={1100}
             widths={[640, 1024, 1440]}
             sizes="(min-width: 1280px) 1200px, 100vw"
           />
@@ -170,6 +172,8 @@ Recommendation        do_not_proceed`;
                 src={rollbackAssessmentConsole}
                 alt="KubePreflight rollback readiness report showing eligibility as eligible, readiness as blocked, and a recommendation of do not proceed."
                 class="w-full"
+                width={720}
+                height={550}
                 widths={[480, 720]}
                 sizes="(min-width: 768px) 420px, 100vw"
               />

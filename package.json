@@ -10,6 +10,7 @@
     "check": "astro check",
     "check:browser": "node scripts/browser-smoke.mjs",
     "check:links": "node scripts/check-links.mjs",
+    "check:lighthouse": "node scripts/check-lighthouse.mjs",
     "build": "astro check && astro build",
     "verify": "npm run build && npm run check:links",
     "preview": "astro preview",
@@ -23,6 +24,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "chrome-launcher": "^1.2.1",
+    "lighthouse": "^12.8.2",
     "typescript": "^6.0.3"
   }
 }
