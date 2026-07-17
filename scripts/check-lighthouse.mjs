@@ -2,7 +2,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import * as chromeLauncher from 'chrome-launcher';
 import lighthouse from 'lighthouse';
 
-const baseUrl = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:4322';
+const baseUrl = process.env.LIGHTHOUSE_BASE_URL || process.env.SMOKE_BASE_URL || 'http://127.0.0.1:4322';
 const chromePath = process.env.CHROME_BIN || undefined;
 
 const paths = ['/', '/install', '/use-cases', '/github-action', '/case-study/eks-1-31-to-1-32', '/security'];
