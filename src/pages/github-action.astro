@@ -1,0 +1,240 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/layout/Container.astro';
+import Section from '../components/layout/Section.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import IconLink from '../components/ui/IconLink.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import { site } from '../content/site';
+
+const VERSION = site.currentVersion;
+
+const basicScan = `- uses: imneeteeshyadav98/kubepreflight@${VERSION}
+  with:
+    target-version: '1.36'
+    manifests: './deploy'
+    manifests-only: 'true'`;
+
+const prGateWorkflow = `name: kubepreflight-pr-gate
+on:
+  pull_request:
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: \${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - uses: imneeteeshyadav98/kubepreflight@${VERSION}
+        id: baseline
+        with:
+          target-version: '1.36'
+          manifests: './base/deploy'
+          manifests-only: 'true'
+          findings-out: 'baseline-findings.json'
+
+      - uses: actions/checkout@v7
+        with:
+          ref: \${{ github.event.pull_request.head.sha }}
+          path: head
+
+      - uses: imneeteeshyadav98/kubepreflight@${VERSION}
+        id: current
+        with:
+          target-version: '1.36'
+          manifests: './head/deploy'
+          manifests-only: 'true'
+          findings-out: 'current-findings.json'
+
+      - uses: imneeteeshyadav98/kubepreflight/compare@${VERSION}
+        with:
+          baseline: \${{ steps.baseline.outputs.findings-file }}
+          current: \${{ steps.current.outputs.findings-file }}`;
+
+const policyInputs = [
+  { input: 'fail-on-new-blockers', default: "'true'", meaning: 'Fail when current has a new Blocker finding baseline did not' },
+  { input: 'warning-policy', default: "'ignore'", meaning: "ignore, fail_on_new, or fail_on_any" },
+  { input: 'fail-on-verdict-regression', default: "'true'", meaning: 'Fail when the overall verdict gets strictly worse' },
+  { input: 'minimum-score-delta', default: "'0'", meaning: 'Lowest readiness-score movement that still passes' }
+];
+
+const whatYouGet = [
+  {
+    index: '01',
+    title: 'Step Summary',
+    description: 'Gate decision and reasons, verdict and readiness-score movement, and full tables of every new and resolved finding — rendered on the job summary page.'
+  },
+  {
+    index: '02',
+    title: 'Inline annotations',
+    description: 'One inline error annotation per newly introduced Blocker, linked to its source file when the finding came from a scanned manifest.'
+  },
+  {
+    index: '03',
+    title: 'Workflow artifacts',
+    description: 'comparison.json and gate.json uploaded as a kubepreflight-comparison artifact on every run, including failed ones — a downloadable report for a blocked PR.'
+  }
+];
+
+const gateOutput = `# What the case study's own comparison gate produced
+decision              pass
+new-blockers          0
+resolved-findings     9
+score-delta           +38
+reasons                (empty — nothing regressed)`;
+---
+
+<BaseLayout
+  title="GitHub Action"
+  description="Gate pull requests on Kubernetes upgrade readiness with the KubePreflight GitHub Action: a basic scan, a baseline/current comparison, and a configurable regression policy — backed by the real 19 to 57, 9 resolved, 0 new blockers EKS case-study evidence."
+>
+  <Section tone="ink" spacing="md">
+    <Container>
+      <a href="/" class="text-sm text-text-muted hover:text-text-primary transition-colors duration-150">
+        ← Back to home
+      </a>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <Badge tone="blue">GitHub Action</Badge>
+        <Badge tone="neutral">{VERSION}</Badge>
+      </div>
+
+      <h1 class="mt-5 max-w-2xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
+        Gate pull requests on upgrade readiness.
+      </h1>
+
+      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-text-muted">
+        The same read-only <span class="font-mono text-text-primary">scan</span> you'd run locally,
+        wired into CI as a job pass/fail decision — plus a sibling action that gates a PR on
+        <em>regressions</em>, not just a single scan's absolute state.
+      </p>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="max-w-2xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Basic scan</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Fail the job on a Blocker verdict.</h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          A manifest-only scan needs no cluster or AWS credentials in CI — good for gating every
+          pull request that touches manifests.
+        </p>
+      </div>
+      <CodeBlock title=".github/workflows/scan.yml" code={basicScan} class="mt-8" />
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-2xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Baseline vs. current</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Gate on regressions, not absolutes.</h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          A single scan can't tell you whether a PR made things worse. This scans the base ref and
+          the head ref, then compares them: new blockers, resolved findings, verdict movement, and
+          readiness-score delta.
+        </p>
+      </div>
+      <CodeBlock title=".github/workflows/kubepreflight-pr-gate.yml" code={prGateWorkflow} class="mt-8" />
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="max-w-2xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Policy controls</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Choose what fails the gate.</h2>
+      </div>
+
+      <div class="mt-10 overflow-hidden rounded-[var(--radius-md)] border border-border">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-b border-border bg-ink-900">
+                <th class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Input</th>
+                <th class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Default</th>
+                <th class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                policyInputs.map((row, i) => (
+                  <tr class={i < policyInputs.length - 1 ? 'border-b border-border' : ''}>
+                    <td class="whitespace-nowrap px-5 py-4 align-top font-mono text-xs text-signal">{row.input}</td>
+                    <td class="whitespace-nowrap px-5 py-4 align-top font-mono text-xs text-text-muted">{row.default}</td>
+                    <td class="px-5 py-4 align-top text-text-muted">{row.meaning}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-2xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">What you get</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Evidence, not just a red X.</h2>
+      </div>
+
+      <div class="mt-14 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-md)] border border-border bg-border md:grid-cols-3">
+        {
+          whatYouGet.map((item) => (
+            <div class="flex flex-col bg-ink-950 p-8">
+              <span class="font-mono text-sm text-signal">{item.index}</span>
+              <h3 class="mt-4 font-editorial text-xl text-text-primary">{item.title}</h3>
+              <p class="mt-3 flex-1 text-sm leading-relaxed text-text-muted">{item.description}</p>
+            </div>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-16 md:grid-cols-12">
+        <div class="md:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Real evidence</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">This is what a passing gate looks like.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Run the compare action on the EKS 1.31 → 1.32 case study's own baseline and current
+            scans, and this is the gate output it produces.
+          </p>
+          <IconLink href="/case-study/eks-1-31-to-1-32" class="mt-6">
+            Read the full case study
+          </IconLink>
+        </div>
+        <div class="md:col-span-7">
+          <CodeBlock title="kubepreflight/compare" code={gateOutput} />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink" border={false}>
+    <Container>
+      <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-xl">
+          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Every input, output, and edge case.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            The EKS kubeconfig caveat, the full inputs/outputs reference, and the exit-policy table
+            live in the core repo's CI integration doc.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <Button href={site.ciDocsUrl} external>Read the full reference</Button>
+          <IconLink href="/install">Install the CLI</IconLink>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>

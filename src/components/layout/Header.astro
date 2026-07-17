@@ -27,6 +27,7 @@ function isActive(href: string): boolean {
               class={`text-sm transition-colors duration-150 ${
                 isActive(item.href) ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'
               }`}
+              {...(item.external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
             >
               {item.label}
             </a>
@@ -39,7 +40,7 @@ function isActive(href: string): boolean {
       <IconLink href={site.githubUrl} icon="github" external class="text-text-muted hover:text-text-primary">
         <span class="sr-only">GitHub</span>
       </IconLink>
-      <Button href={site.installDocsUrl} external size="sm">Run your first scan</Button>
+      <Button href="/install" size="sm">Run your first scan</Button>
     </div>
 
     <details class="relative lg:hidden">
@@ -57,7 +58,11 @@ function isActive(href: string): boolean {
           {
             primaryNav.map((item) => (
               <li>
-                <a href={item.href} class="block text-sm text-text-primary">
+                <a
+                  href={item.href}
+                  class="block text-sm text-text-primary"
+                  {...(item.external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
+                >
                   {item.label}
                 </a>
               </li>
@@ -68,7 +73,7 @@ function isActive(href: string): boolean {
           <IconLink href={site.githubUrl} icon="github" external>
             GitHub
           </IconLink>
-          <Button href={site.installDocsUrl} external size="sm" class="w-full">Run your first scan</Button>
+          <Button href="/install" size="sm" class="w-full">Run your first scan</Button>
         </div>
       </div>
     </details>
