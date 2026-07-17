@@ -8,7 +8,6 @@ import Badge from '../../components/ui/Badge.astro';
 import Button from '../../components/ui/Button.astro';
 import CodeBlock from '../../components/ui/CodeBlock.astro';
 import IconLink from '../../components/ui/IconLink.astro';
-import { site } from '../../content/site';
 import beforeRemediationConsole from '../../assets/case-study/before-remediation-console.png';
 import rollbackAssessmentConsole from '../../assets/case-study/rollback-assessment-console.png';
 
@@ -196,8 +195,8 @@ Recommendation        do_not_proceed`;
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
-          <Button href={site.installDocsUrl} external>Run your first scan</Button>
-          <IconLink href={site.ciDocsUrl} icon="external" external>See how the gate works in CI</IconLink>
+          <Button href="/install">Run your first scan</Button>
+          <IconLink href="/github-action">See how the gate works in CI</IconLink>
         </div>
       </div>
     </Container>
