@@ -233,7 +233,13 @@ const structuredData = {
           </p>
         </div>
         <div class="md:col-span-7">
-          <CodeBlock title="checksum verification" code={verifyRelease} />
+          <CodeBlock
+            title="checksum verification"
+            code={verifyRelease}
+            copyable
+            kind="command"
+            copyLabel="Copy checksum verification command"
+          />
         </div>
       </div>
     </Container>

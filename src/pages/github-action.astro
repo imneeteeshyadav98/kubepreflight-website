@@ -125,7 +125,14 @@ reasons                (empty — nothing regressed)`;
           pull request that touches manifests.
         </p>
       </div>
-      <CodeBlock title=".github/workflows/scan.yml" code={basicScan} class="mt-8" />
+      <CodeBlock
+        title=".github/workflows/scan.yml"
+        code={basicScan}
+        class="mt-8"
+        copyable
+        kind="command"
+        copyLabel="Copy basic scan workflow YAML"
+      />
     </Container>
   </Section>
 
@@ -140,7 +147,14 @@ reasons                (empty — nothing regressed)`;
           readiness-score delta.
         </p>
       </div>
-      <CodeBlock title=".github/workflows/kubepreflight-pr-gate.yml" code={prGateWorkflow} class="mt-8" />
+      <CodeBlock
+        title=".github/workflows/kubepreflight-pr-gate.yml"
+        code={prGateWorkflow}
+        class="mt-8"
+        copyable
+        kind="command"
+        copyLabel="Copy PR-gate workflow YAML"
+      />
     </Container>
   </Section>
 
@@ -214,7 +228,7 @@ reasons                (empty — nothing regressed)`;
           </IconLink>
         </div>
         <div class="md:col-span-7">
-          <CodeBlock title="kubepreflight/compare" code={gateOutput} />
+          <CodeBlock title="kubepreflight/compare" code={gateOutput} kind="output" />
         </div>
       </div>
     </Container>
