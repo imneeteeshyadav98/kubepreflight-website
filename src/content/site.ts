@@ -1,3 +1,10 @@
+// The current verified KubePreflight release every version-pinned command
+// on the site derives from. Set via PUBLIC_KUBEPREFLIGHT_VERSION (see
+// .env.example) so a future release only needs an env var change + redeploy
+// — never a source edit. Falls back to the last release wired in here if the
+// env var isn't set, so local dev and CI never break silently.
+const currentVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v0.14.0';
+
 export const site = {
   name: 'KubePreflight',
   tagline: 'Upgrade Kubernetes with evidence, not assumptions.',
@@ -15,13 +22,10 @@ export const site = {
   releasesUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/releases',
   issuesUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/issues',
   securityDisclosureUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/security/advisories/new',
-  // The current verified release every version-pinned command on the site
-  // derives from — never bump this by editing individual pages. Same commit
-  // as the immutable v0.14.0-real-eks-case-study milestone tag; this is the
-  // clean public SemVer alias published for production use.
-  currentVersion: 'v0.14.0',
+  currentVersion,
   // Same release, without the leading "v" — the shape ghcr.io Docker tags use.
-  currentDockerTag: '0.14.0',
+  // Derived, not a second env var, so the two can never drift out of sync.
+  currentDockerTag: currentVersion.replace(/^v/, ''),
   ogImage: '/og/default.svg',
   locale: 'en-US',
   twitterHandle: undefined as string | undefined
