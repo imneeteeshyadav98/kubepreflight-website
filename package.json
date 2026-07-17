@@ -11,9 +11,13 @@
     "check:browser": "node scripts/browser-smoke.mjs",
     "check:links": "node scripts/check-links.mjs",
     "check:lighthouse": "node scripts/check-lighthouse.mjs",
-    "build": "astro check && astro build",
-    "verify": "npm run build && npm run check:links",
+    "build": "astro build",
+    "clean": "node scripts/clean-build.mjs",
+    "verify": "npm run check && npm run build && npm run check:links",
+    "build:prod": "npm run clean && npm run verify",
     "preview": "astro preview",
+    "preview:prod": "astro preview --host 127.0.0.1 --port 4322",
+    "prod": "npm run build:prod && npm run preview:prod",
     "astro": "astro"
   },
   "dependencies": {
