@@ -3,6 +3,7 @@ import Container from '../layout/Container.astro';
 import Section from '../layout/Section.astro';
 import CodeBlock from '../ui/CodeBlock.astro';
 import Button from '../ui/Button.astro';
+import { site } from '../../content/site';
 
 const installCode = `$ curl -sSL https://kubepreflight.com/install.sh | sh
 $ kubepreflight scan --context <your-context> --target 1.32`;
@@ -18,7 +19,7 @@ $ kubepreflight scan --context <your-context> --target 1.32`;
           A single static binary. No cluster agent, no webhook to install, no persistent
           credentials left behind.
         </p>
-        <Button href="/install" class="mt-8">See all install options</Button>
+        <Button href={site.installDocsUrl} external class="mt-8">See all install options</Button>
       </div>
 
       <div class="md:col-span-7">

@@ -3,6 +3,7 @@ import Container from '../layout/Container.astro';
 import Section from '../layout/Section.astro';
 import CodeBlock from '../ui/CodeBlock.astro';
 import IconLink from '../ui/IconLink.astro';
+import { site } from '../../content/site';
 
 const without = [
   'Upgrade risk discovered after merge, not before',
@@ -65,7 +66,7 @@ const actionYaml = `- name: KubePreflight readiness gate
 
     <div class="mt-8">
       <CodeBlock title=".github/workflows/upgrade-readiness.yml" code={actionYaml} />
-      <IconLink href="/github-action" class="mt-4">
+      <IconLink href={site.ciDocsUrl} icon="external" external class="mt-4">
         View the full GitHub Action reference
       </IconLink>
     </div>

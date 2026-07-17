@@ -39,7 +39,7 @@ function isActive(href: string): boolean {
       <IconLink href={site.githubUrl} icon="github" external class="text-text-muted hover:text-text-primary">
         <span class="sr-only">GitHub</span>
       </IconLink>
-      <Button href="/install" size="sm">Run your first scan</Button>
+      <Button href={site.installDocsUrl} external size="sm">Run your first scan</Button>
     </div>
 
     <details class="relative lg:hidden">
@@ -68,7 +68,7 @@ function isActive(href: string): boolean {
           <IconLink href={site.githubUrl} icon="github" external>
             GitHub
           </IconLink>
-          <Button href="/install" size="sm" class="w-full">Run your first scan</Button>
+          <Button href={site.installDocsUrl} external size="sm" class="w-full">Run your first scan</Button>
         </div>
       </div>
     </details>
