@@ -119,43 +119,71 @@ const exitCodes = [
 
   <Section tone="ink">
     <Container>
-      <div class="max-w-2xl">
+      <div id="binary" class="max-w-2xl">
         <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Get the binary</span>
         <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Three ways to run it.</h2>
       </div>
 
       <div class="mt-10 flex flex-col gap-8">
-        <div>
+        <div id="linux">
           <h3 class="font-mono text-sm text-text-primary">Linux (amd64)</h3>
           <p class="mt-2 text-sm text-text-muted">
             arm64 uses the same steps — substitute <span class="font-mono">linux_arm64</span> for{' '}
             <span class="font-mono">linux_amd64</span> throughout.
           </p>
-          <CodeBlock title="terminal" code={linuxInstall} class="mt-4" />
+          <CodeBlock
+            title="terminal"
+            code={linuxInstall}
+            class="mt-4"
+            copyable
+            kind="command"
+            copyLabel="Copy Linux install command"
+          />
         </div>
 
-        <div>
+        <div id="macos">
           <h3 class="font-mono text-sm text-text-primary">macOS (Apple Silicon)</h3>
           <p class="mt-2 text-sm text-text-muted">
             Intel Macs: substitute <span class="font-mono">darwin_amd64</span> for{' '}
             <span class="font-mono">darwin_arm64</span> throughout.
           </p>
-          <CodeBlock title="terminal" code={macInstall} class="mt-4" />
+          <CodeBlock
+            title="terminal"
+            code={macInstall}
+            class="mt-4"
+            copyable
+            kind="command"
+            copyLabel="Copy macOS install command"
+          />
           <p class="mt-3 text-sm text-text-muted">
             If Gatekeeper refuses to run the binary, clear the quarantine attribute rather than
             disabling Gatekeeper system-wide:
           </p>
-          <CodeBlock title="terminal" code={gatekeeperFix} class="mt-3" />
+          <CodeBlock
+            title="terminal"
+            code={gatekeeperFix}
+            class="mt-3"
+            copyable
+            kind="command"
+            copyLabel="Copy Gatekeeper quarantine fix"
+          />
         </div>
 
-        <div>
+        <div id="docker">
           <h3 class="font-mono text-sm text-text-primary">Docker</h3>
           <p class="mt-2 text-sm text-text-muted">
             The image is distroless and runs as a fixed non-root user — mount output directories
             with <span class="font-mono">--user "$(id -u):$(id -g)"</span> to avoid permission
             errors.
           </p>
-          <CodeBlock title="terminal" code={dockerInstall} class="mt-4" />
+          <CodeBlock
+            title="terminal"
+            code={dockerInstall}
+            class="mt-4"
+            copyable
+            kind="command"
+            copyLabel="Copy Docker install command"
+          />
         </div>
       </div>
     </Container>
@@ -163,7 +191,7 @@ const exitCodes = [
 
   <Section tone="ink-raised">
     <Container>
-      <div class="max-w-2xl">
+      <div id="checksum" class="max-w-2xl">
         <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Verify the download</span>
         <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Every release is checksummed.</h2>
         <p class="mt-4 leading-relaxed text-text-muted">
@@ -171,7 +199,14 @@ const exitCodes = [
           asset into one folder, verify all of them at once:
         </p>
       </div>
-      <CodeBlock title="terminal" code={checksumVerify} class="mt-8" />
+      <CodeBlock
+        title="terminal"
+        code={checksumVerify}
+        class="mt-8"
+        copyable
+        kind="command"
+        copyLabel="Copy checksum verification command"
+      />
     </Container>
   </Section>
 
@@ -225,9 +260,37 @@ const exitCodes = [
       </div>
 
       <div class="mt-10 flex flex-col gap-6">
-        <CodeBlock title="manifest scan — no credentials" code={manifestScan} />
-        <CodeBlock title="live cluster scan — kubeconfig required" code={liveScan} />
-        <CodeBlock title="EKS scan — kubeconfig + AWS IAM required" code={eksScan} />
+        <div id="manifest-scan">
+          <CodeBlock
+            title="manifest scan — no credentials"
+            code={manifestScan}
+            copyable
+            kind="command"
+            copyLabel="Copy manifest scan command"
+          />
+        </div>
+        <div id="live-cluster">
+          <CodeBlock
+            title="live cluster scan — kubeconfig required"
+            code={liveScan}
+            copyable
+            kind="command"
+            copyLabel="Copy live cluster scan command"
+          />
+        </div>
+        <div id="eks-scan">
+          <p class="mb-2 text-xs text-amber">
+            Replace <span class="font-mono">production-eks</span> and{' '}
+            <span class="font-mono">ap-south-1</span> with your own cluster name and region before running.
+          </p>
+          <CodeBlock
+            title="EKS scan — kubeconfig + AWS IAM required"
+            code={eksScan}
+            copyable
+            kind="command"
+            copyLabel="Copy EKS scan command"
+          />
+        </div>
       </div>
     </Container>
   </Section>

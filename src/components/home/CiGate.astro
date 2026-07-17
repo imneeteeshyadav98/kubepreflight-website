@@ -65,7 +65,13 @@ const actionYaml = `- uses: imneeteeshyadav98/kubepreflight/compare@${site.curre
     </div>
 
     <div class="mt-8">
-      <CodeBlock title=".github/workflows/upgrade-readiness.yml" code={actionYaml} />
+      <CodeBlock
+        title=".github/workflows/upgrade-readiness.yml"
+        code={actionYaml}
+        copyable
+        kind="command"
+        copyLabel="Copy CI regression gate workflow YAML"
+      />
       <IconLink href="/github-action" class="mt-4">
         View the full GitHub Action reference
       </IconLink>
