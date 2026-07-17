@@ -19,12 +19,9 @@ export const site = {
   iamPolicyUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/blob/master/deploy/iam-policy.json',
   releasesUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/releases',
   issuesUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/issues',
-  // /use-cases and /security land in PR5 — nav points at the core repo's
-  // closest-matching docs until then, so nothing in the header/footer 404s.
-  useCasesDocsUrl: 'https://github.com/imneeteeshyadav98/kubepreflight#current-capabilities',
-  securityDocsUrl: 'https://github.com/imneeteeshyadav98/kubepreflight#permissions',
+  securityDisclosureUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/security/advisories/new',
   currentVersion: 'v0.14.0-real-eks-case-study',
-  ogImage: '/og/default.png',
+  ogImage: '/og/default.svg',
   locale: 'en-US',
   twitterHandle: undefined as string | undefined
 } as const;

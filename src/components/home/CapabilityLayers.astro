@@ -2,19 +2,15 @@
 import Container from '../layout/Container.astro';
 import Section from '../layout/Section.astro';
 import IconLink from '../ui/IconLink.astro';
-import { site } from '../../content/site';
-
 const layers = [
   {
     index: '01',
     title: 'Upgrade readiness scoring',
     description:
       'Scans manifests and live cluster state against the target Kubernetes version — deprecated APIs, removed fields, webhook compatibility — into one comparable score.',
-    // /use-cases doesn't have a local page until PR5 — points at the core
-    // repo's capability table in the meantime.
-    href: site.useCasesDocsUrl,
+    href: '/use-cases',
     linkLabel: 'See the upgrade planning workflow',
-    external: true
+    external: false
   },
   {
     index: '02',
@@ -51,7 +47,7 @@ const layers = [
             <span class="font-mono text-sm text-signal">{layer.index}</span>
             <h3 class="mt-4 font-editorial text-xl text-text-primary">{layer.title}</h3>
             <p class="mt-3 flex-1 text-sm leading-relaxed text-text-muted">{layer.description}</p>
-            <IconLink href={layer.href} external={layer.external} icon={layer.external ? 'external' : 'arrow'} class="mt-6">
+            <IconLink href={layer.href} external={layer.external} class="mt-6">
               {layer.linkLabel}
             </IconLink>
           </div>
