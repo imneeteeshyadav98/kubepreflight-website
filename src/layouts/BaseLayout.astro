@@ -9,9 +9,11 @@ interface Props {
   description?: string;
   image?: string;
   noindex?: boolean;
+  structuredData?: Record<string, unknown> | readonly Record<string, unknown>[];
 }
 
-const { title, description, image, noindex } = Astro.props;
+const { title, description, image, noindex, structuredData } = Astro.props;
+const structuredDataJson = structuredData ? JSON.stringify(structuredData) : undefined;
 ---
 
 <!doctype html>
@@ -21,9 +23,12 @@ const { title, description, image, noindex } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="mask-icon" href="/favicon.svg" color="#36d399" />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta name="generator" content={Astro.generator} />
     <meta name="theme-color" content="#071019" />
     <SEO title={title} description={description} image={image} noindex={noindex} />
+    {structuredDataJson && <script is:inline type="application/ld+json" set:html={structuredDataJson} />}
   </head>
   <body class="bg-ink-950 text-text-primary">
     <a

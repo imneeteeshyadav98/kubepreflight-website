@@ -1,0 +1,290 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/layout/Container.astro';
+import Section from '../components/layout/Section.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import IconLink from '../components/ui/IconLink.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import { site } from '../content/site';
+
+const boundaries = [
+  {
+    title: 'Read-only by design',
+    body: 'KubePreflight collects evidence and writes local reports. It is not a controller, admission webhook, operator, or agent.'
+  },
+  {
+    title: 'No cluster mutation',
+    body: 'The published RBAC grants only `get` and `list`, plus one allowlisted ConfigMap `get` for `kube-system/coredns`. It does not request create, update, patch, delete, exec, or secrets access.'
+  },
+  {
+    title: 'No credential storage',
+    body: 'The CLI uses the kubeconfig or AWS credentials already available to the process. It does not persist copied tokens, cloud credentials, or cluster secrets.'
+  },
+  {
+    title: 'Offline manifest scanning',
+    body: '`--manifests-only` reads YAML from disk and does not require a kubeconfig, AWS credentials, or network access to a cluster.'
+  }
+];
+
+const rbacRows = [
+  ['Core inventory', 'nodes, pods, services, deployments, daemonsets, customresourcedefinitions', 'get, list'],
+  ['Upgrade checks', 'poddisruptionbudgets, webhook configurations, endpointslices, API removals, RBAC graph, storage, scheduling, events, leases, CSRs', 'get, list'],
+  ['CoreDNS add-on check', 'kube-system ConfigMap named coredns', 'get only']
+];
+
+const iamActions = [
+  'eks:DescribeCluster',
+  'eks:ListInsights',
+  'eks:DescribeInsight',
+  'eks:ListAddons',
+  'eks:DescribeAddon',
+  'eks:DescribeAddonVersions',
+  'eks:ListNodegroups',
+  'eks:DescribeNodegroup',
+  'ec2:DescribeSubnets',
+  'ec2:DescribeSecurityGroups',
+  'ec2:DescribeVpcs'
+];
+
+const artifactRows = [
+  ['findings.json', 'Machine-readable findings, verdicts, evidence, target version, and scanner metadata.'],
+  ['report.md', 'Human-readable Markdown summary when Markdown output is requested.'],
+  ['report.html', 'Self-contained HTML report with the embedded KubePreflight Console.']
+];
+
+const verifyRelease = `VERSION=${site.currentVersion}
+
+curl -LO "https://github.com/imneeteeshyadav98/kubepreflight/releases/download/\${VERSION}/kubepreflight_\${VERSION}_linux_amd64.tar.gz"
+curl -LO "https://github.com/imneeteeshyadav98/kubepreflight/releases/download/\${VERSION}/kubepreflight_\${VERSION}_checksums.txt"
+grep "kubepreflight_\${VERSION}_linux_amd64.tar.gz" "kubepreflight_\${VERSION}_checksums.txt" | sha256sum -c -`;
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: 'KubePreflight security guidance',
+  description: 'Security boundaries, read-only Kubernetes RBAC, AWS IAM, artifact contents, verification, and support limits for KubePreflight.',
+  url: `${site.url}/security`,
+  publisher: {
+    '@type': 'Organization',
+    name: site.name,
+    url: site.url
+  }
+};
+---
+
+<BaseLayout
+  title="Security"
+  description="KubePreflight security guidance: read-only design, real Kubernetes RBAC and AWS IAM requirements, no credential storage, offline manifest scanning, artifact sanitization, release verification, and support boundaries."
+  structuredData={structuredData}
+>
+  <Section tone="ink" spacing="md">
+    <Container>
+      <a href="/" class="text-sm text-text-muted hover:text-text-primary transition-colors duration-150">
+        ← Back to home
+      </a>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <Badge tone="blue">Security</Badge>
+        <Badge tone="neutral">Read-only scanner</Badge>
+      </div>
+
+      <h1 class="mt-5 max-w-3xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
+        Security boundaries you can review before you run it.
+      </h1>
+
+      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-text-muted">
+        KubePreflight is built to collect upgrade evidence without mutating your cluster or cloud
+        account. The permissions below come from the published RBAC and IAM artifacts, not a
+        generic administrator shortcut.
+      </p>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {
+          boundaries.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-900 p-6">
+              <h2 class="font-mono text-sm text-text-primary">{item.title}</h2>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-2xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Kubernetes RBAC</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Read-only cluster evidence.</h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          The shipped RBAC grants no write verbs and no access to Secret contents. RBAC graph reads
+          are included for deprecated API checks, so the scanner credential should still be treated
+          as a sensitive cluster-wide read credential.
+        </p>
+      </div>
+
+      <div class="mt-10 overflow-hidden rounded-[var(--radius-md)] border border-border">
+        <table class="w-full border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b border-border bg-ink-950">
+              <th class="px-4 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Area</th>
+              <th class="px-4 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Resources</th>
+              <th class="px-4 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Verbs</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              rbacRows.map((row, i) => (
+                <tr class={i < rbacRows.length - 1 ? 'border-b border-border' : ''}>
+                  <td class="px-4 py-4 align-top font-mono text-xs text-text-primary">{row[0]}</td>
+                  <td class="break-words px-4 py-4 align-top text-text-muted">{row[1]}</td>
+                  <td class="px-4 py-4 align-top font-mono text-xs text-signal">{row[2]}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <IconLink href={site.clusterRoleUrl} icon="external" external class="mt-6">
+        Review clusterrole.yaml
+      </IconLink>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-12 md:grid-cols-12">
+        <div class="md:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">AWS IAM</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">EKS checks use read-only AWS APIs.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            IAM is only required for <span class="font-mono text-text-primary">--provider eks</span>.
+            The published policy uses read-only EKS and EC2 describe/list actions for cluster
+            state, upgrade insights, add-ons, node groups, subnets, security groups, and VPCs.
+          </p>
+          <IconLink href={site.iamPolicyUrl} icon="external" external class="mt-6">
+            Review iam-policy.json
+          </IconLink>
+        </div>
+        <div class="md:col-span-7">
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {
+              iamActions.map((action) => (
+                <code class="break-words rounded-[var(--radius-sm)] border border-border bg-ink-900 px-3 py-2 text-xs text-text-muted">
+                  {action}
+                </code>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-12 md:grid-cols-12">
+        <div class="md:col-span-6">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">Artifacts</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">Know what leaves the scanner.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            KubePreflight writes local artifacts where you tell it to. Reports can contain resource
+            names, namespaces, API versions, add-on names, cluster versions, readiness decisions,
+            and finding evidence. They should be reviewed and sanitized before being shared outside
+            your organization.
+          </p>
+        </div>
+        <div class="md:col-span-6">
+          <div class="overflow-hidden rounded-[var(--radius-md)] border border-border-dark">
+            <table class="w-full border-collapse text-left text-sm">
+              <tbody>
+                {
+                  artifactRows.map((row, i) => (
+                    <tr class={i < artifactRows.length - 1 ? 'border-b border-border-dark' : ''}>
+                      <td class="px-4 py-4 align-top font-mono text-xs text-text-dark">{row[0]}</td>
+                      <td class="px-4 py-4 align-top text-text-muted-dark">{row[1]}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="grid grid-cols-1 gap-12 md:grid-cols-12">
+        <div class="md:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Release verification</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Verify binaries, images, SBOMs, and checksums.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Releases publish checksum files and an SPDX SBOM. Pin a version in production
+            automation, verify the checksum before installing a binary, and avoid treating a moving
+            tag as a release lock.
+          </p>
+        </div>
+        <div class="md:col-span-7">
+          <CodeBlock title="checksum verification" code={verifyRelease} />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-12 md:grid-cols-12">
+        <div class="md:col-span-7">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Disclosure and support</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Report vulnerabilities responsibly.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            For suspected security issues, use the responsible disclosure contact. For usage
+            questions, bugs, and feature requests, open a GitHub issue with the sanitized command,
+            version, target Kubernetes version, and relevant report excerpt.
+          </p>
+          <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <Button href={site.securityDisclosureUrl} external>Responsible disclosure</Button>
+            <IconLink href={site.issuesUrl} icon="external" external>
+              Support issues
+            </IconLink>
+          </div>
+        </div>
+        <div class="md:col-span-5">
+          <div class="rounded-[var(--radius-md)] border border-amber-dim bg-amber/10 p-6">
+            <h3 class="font-mono text-sm text-amber">Non-guarantee boundary</h3>
+            <p class="mt-3 text-sm leading-relaxed text-text-muted">
+              KubePreflight evaluates evidence available to it. It does not guarantee that an
+              upgrade or rollback will succeed.
+            </p>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink" border={false}>
+    <Container>
+      <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-xl">
+          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Run the least-privileged scan first.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Manifest-only scanning needs no cluster or cloud credentials. Add live-cluster and EKS
+            evidence only when the decision needs those signals.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <Button href="/install">Review install options</Button>
+          <IconLink href="/use-cases">Map the use cases</IconLink>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>

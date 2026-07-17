@@ -1,0 +1,179 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/layout/Container.astro';
+import Section from '../components/layout/Section.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import IconLink from '../components/ui/IconLink.astro';
+import { site } from '../content/site';
+
+const useCases = [
+  {
+    label: 'Upgrade planning',
+    title: 'Kubernetes upgrade planning',
+    problem: 'A platform team needs to know whether workloads, APIs, webhooks, add-ons, nodes, and disruption budgets are ready before scheduling a control-plane upgrade.',
+    evidence: 'Live-cluster inventory, manifest compatibility checks, deprecated API usage, PodDisruptionBudget coverage, webhook backend health, CoreDNS and EKS add-on status, and node compatibility signals.',
+    decision: 'KubePreflight returns a readiness verdict, blocker/warning counts, and a scored report that separates upgrade-stopping issues from follow-up work.',
+    action: 'Fix blockers first, keep warnings visible in the change plan, attach the report to the upgrade ticket, and rerun before the maintenance window.'
+  },
+  {
+    label: 'Rollback support',
+    title: 'EKS rollback decision support',
+    problem: 'Rollback eligibility can look available while the workload evidence still says moving forward would be risky.',
+    evidence: 'EKS control-plane version, upgrade insight inventory, node group and add-on state, live-cluster findings, and the rollback assessment output.',
+    decision: 'KubePreflight distinguishes technical rollback eligibility from the operational recommendation to proceed, hold, or stop.',
+    action: 'Use the rollback assessment as one input in the go/no-go review, document why the team is proceeding or holding, and avoid treating rollback eligibility as a safety guarantee.'
+  },
+  {
+    label: 'CI gate',
+    title: 'CI regression gating',
+    problem: 'A pull request can introduce a new upgrade blocker even when the cluster already has known warnings or legacy debt.',
+    evidence: 'Baseline and current `findings.json` artifacts, new and resolved findings, verdict movement, readiness-score delta, and inline annotations for newly introduced blockers.',
+    decision: 'KubePreflight can fail the PR only when the change makes readiness worse, instead of failing every PR because the baseline was imperfect.',
+    action: 'Run manifest-only scans on base and head refs, compare the outputs, and require the author to remove new blockers before merge.'
+  },
+  {
+    label: 'Manifest scan',
+    title: 'Manifest compatibility scanning',
+    problem: 'Application teams often need feedback before they have cluster credentials or before a manifest change reaches a shared environment.',
+    evidence: 'YAML manifests, Helm-rendered output, deprecated API versions, removal targets, and source-file locations for findings that came from scanned manifests.',
+    decision: 'KubePreflight reports whether the submitted manifests contain upgrade blockers for the target Kubernetes version.',
+    action: 'Run `kubepreflight scan --manifests-only` locally or in CI, fix incompatible APIs before review, and attach the machine-readable report when exceptions are needed.'
+  },
+  {
+    label: 'Change review',
+    title: 'SRE and platform change reviews',
+    problem: 'Reviewers need a compact, repeatable evidence package rather than scattered screenshots, CLI snippets, and individual opinions.',
+    evidence: 'A self-contained HTML report, Markdown summary, canonical JSON findings, categorized risks, exit code, and the exact scan target.',
+    decision: 'KubePreflight gives reviewers a consistent risk vocabulary: clean, warning, blocker, incomplete, or infrastructure failure.',
+    action: 'Attach the report to the change request, discuss unresolved blockers explicitly, and rerun the scan after remediation so the review has fresh evidence.'
+  },
+  {
+    label: 'Window evidence',
+    title: 'Upgrade evidence for maintenance windows',
+    problem: 'Approvers need proof that the final pre-window state matches the plan, not a stale readiness snapshot from earlier in the week.',
+    evidence: 'Timestamped scan artifacts, target-version configuration, current blocker/warning state, EKS insight status, and comparison output when a previous baseline exists.',
+    decision: 'KubePreflight shows whether the environment still matches the readiness threshold the team agreed to before the window.',
+    action: 'Run a final scan close to the maintenance window, archive the artifacts with the change record, and stop if new blockers appear.'
+  }
+];
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'KubePreflight use cases',
+  description: 'Real operational journeys for KubePreflight upgrade readiness, rollback support, CI gating, manifest scanning, change reviews, and maintenance-window evidence.',
+  url: `${site.url}/use-cases`,
+  mainEntity: useCases.map((item) => ({
+    '@type': 'Article',
+    headline: item.title,
+    description: item.problem
+  }))
+};
+---
+
+<BaseLayout
+  title="Use cases"
+  description="Real KubePreflight user journeys for Kubernetes upgrade planning, EKS rollback decisions, CI regression gating, manifest compatibility scanning, SRE reviews, and maintenance-window evidence."
+  structuredData={structuredData}
+>
+  <Section tone="ink" spacing="md">
+    <Container>
+      <a href="/" class="text-sm text-text-muted hover:text-text-primary transition-colors duration-150">
+        ← Back to home
+      </a>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <Badge tone="blue">Use cases</Badge>
+        <Badge tone="neutral">No fictional adoption claims</Badge>
+      </div>
+
+      <h1 class="mt-5 max-w-3xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
+        Six ways to turn upgrade risk into reviewable evidence.
+      </h1>
+
+      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-text-muted">
+        These are product journeys, not customer stories. Each one follows the same operating
+        model: problem → evidence collected → KubePreflight decision → operator action.
+      </p>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        {
+          useCases.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-900 p-6 md:p-8">
+              <Badge tone="signal">{item.label}</Badge>
+              <h2 class="mt-4 font-editorial text-2xl leading-tight text-text-primary">{item.title}</h2>
+
+              <dl class="mt-6 grid grid-cols-1 gap-5">
+                <div>
+                  <dt class="font-mono text-xs uppercase tracking-wide text-text-muted">Problem</dt>
+                  <dd class="mt-2 text-sm leading-relaxed text-text-muted">{item.problem}</dd>
+                </div>
+                <div>
+                  <dt class="font-mono text-xs uppercase tracking-wide text-text-muted">Evidence collected</dt>
+                  <dd class="mt-2 text-sm leading-relaxed text-text-muted">{item.evidence}</dd>
+                </div>
+                <div>
+                  <dt class="font-mono text-xs uppercase tracking-wide text-text-muted">KubePreflight decision</dt>
+                  <dd class="mt-2 text-sm leading-relaxed text-text-muted">{item.decision}</dd>
+                </div>
+                <div>
+                  <dt class="font-mono text-xs uppercase tracking-wide text-text-muted">Operator action</dt>
+                  <dd class="mt-2 text-sm leading-relaxed text-text-muted">{item.action}</dd>
+                </div>
+              </dl>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 md:grid-cols-12">
+        <div class="md:col-span-7">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">Decision quality</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+            Evidence does not replace operator judgment.
+          </h2>
+          <p class="mt-5 leading-relaxed text-text-muted-dark">
+            KubePreflight evaluates what it can observe: manifests, Kubernetes API state, and
+            provider evidence when configured. It cannot know every runtime dependency, traffic
+            pattern, business deadline, or organization-specific risk tolerance.
+          </p>
+        </div>
+        <div class="md:col-span-5">
+          <div class="border-l-2 border-signal-dim pl-5">
+            <p class="font-editorial text-xl leading-snug text-text-dark">
+              KubePreflight evaluates evidence available to it. It does not guarantee that an
+              upgrade or rollback will succeed.
+            </p>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink" border={false}>
+    <Container>
+      <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-xl">
+          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Pick the path that matches your change.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Start without credentials for manifest-only scanning, then move to live cluster and EKS
+            evidence when the review needs it.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <Button href="/install">Install the CLI</Button>
+          <IconLink href="/github-action">Set up CI gating</IconLink>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>

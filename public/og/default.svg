@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">KubePreflight</title>
+  <desc id="desc">Upgrade Kubernetes with evidence, not assumptions.</desc>
+  <rect width="1200" height="630" fill="#071019"/>
+  <path d="M0 504h1200v126H0z" fill="#0b1722"/>
+  <path d="M144 140h912v350H144z" fill="#0b1722" stroke="rgba(164,190,202,.28)" stroke-width="2"/>
+  <path d="M202 218h244M202 272h376M202 326h312" stroke="#36d399" stroke-width="18" stroke-linecap="square"/>
+  <path d="M202 398h678" stroke="#5aa7ff" stroke-width="10" stroke-linecap="square" opacity=".9"/>
+  <text x="144" y="82" fill="#f2f7f5" font-family="ui-serif, Georgia, serif" font-size="54">KubePreflight</text>
+  <text x="144" y="562" fill="#91a3ae" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="28">Upgrade Kubernetes with evidence, not assumptions.</text>
+</svg>

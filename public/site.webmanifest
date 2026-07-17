@@ -1,0 +1,21 @@
+{
+  "name": "KubePreflight",
+  "short_name": "KubePreflight",
+  "description": "Upgrade Kubernetes with evidence, not assumptions.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#071019",
+  "theme_color": "#071019",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
