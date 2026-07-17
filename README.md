@@ -64,4 +64,8 @@ Headings and mono text use system font stacks (no webfont network requests), whi
 
 ## Deployment
 
-Static output, deployed to GitHub Pages, served at `kubepreflight.com`. CI (`.github/workflows/ci.yml`) runs `npm run check` and `npm run build` on every push and pull request.
+Static output, deployed to GitHub Pages, served at `kubepreflight.com`.
+
+- CI (`.github/workflows/ci.yml`) runs `npm run check` and `npm run build` on every push and pull request.
+- Production deployment (`.github/workflows/deploy.yml`) runs on pushes to `main`, verifies/builds the site, uploads `dist/`, and deploys through GitHub Pages.
+- Custom domain is committed through `public/CNAME`; repository Pages source must be set to GitHub Actions.
