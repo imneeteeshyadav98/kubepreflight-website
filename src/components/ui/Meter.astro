@@ -1,0 +1,41 @@
+---
+// A 0-100 magnitude bar. Value is always shown as text alongside the fill,
+// so the reading never depends on color or length alone.
+interface Props {
+  label: string;
+  value: number;
+  baseline?: number;
+  tone?: 'signal' | 'blue' | 'amber';
+  class?: string;
+}
+
+const { label, value, baseline, tone = 'signal', class: className = '' } = Astro.props;
+
+const toneFill: Record<NonNullable<Props['tone']>, string> = {
+  signal: 'bg-signal',
+  blue: 'bg-blue',
+  amber: 'bg-amber'
+};
+---
+
+<div class={className}>
+  <div class="flex items-baseline justify-between">
+    <span class="font-mono text-xs uppercase tracking-wide text-text-muted">{label}</span>
+    <span class="font-mono text-sm text-text-primary">
+      {value}<span class="text-text-muted">/100</span>
+      {baseline !== undefined && <span class="ml-2 text-text-muted">(from {baseline})</span>}
+    </span>
+  </div>
+  <div class="relative mt-2.5 h-1.5 rounded-full bg-ink-800">
+    {
+      baseline !== undefined && (
+        <span
+          class="absolute top-1/2 h-3 w-0.5 -translate-y-1/2 bg-text-muted"
+          style={`left:${baseline}%`}
+          aria-hidden="true"
+        />
+      )
+    }
+    <span class={`absolute inset-y-0 left-0 rounded-full ${toneFill[tone]}`} style={`width:${value}%`} />
+  </div>
+</div>

@@ -1,0 +1,75 @@
+---
+import Container from '../layout/Container.astro';
+import Section from '../layout/Section.astro';
+
+const lines: { text: string; tone: 'prompt' | 'ok' | 'warn' | 'result' }[] = [
+  { text: '$ kubepreflight scan --context eks-prod --target 1.32', tone: 'prompt' },
+  { text: '✓ collected 142 workload objects', tone: 'ok' },
+  { text: '✓ checked deprecated API usage', tone: 'ok' },
+  { text: '⚠ 3 blockers found', tone: 'warn' },
+  { text: 'Readiness: 57/100', tone: 'result' }
+];
+
+const toneClass: Record<(typeof lines)[number]['tone'], string> = {
+  prompt: 'text-signal',
+  ok: 'text-text-muted',
+  warn: 'text-amber',
+  result: 'text-text-primary'
+};
+---
+
+<Section tone="ink-raised">
+  <Container>
+    <div class="grid grid-cols-1 gap-16 md:grid-cols-12 md:items-center">
+      <div class="md:col-span-5">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">See it run</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">The same evaluation, every time.</h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          One command inventories the cluster and checks it against your target version. No
+          dashboards to configure first — the terminal is the interface.
+        </p>
+      </div>
+
+      <div class="md:col-span-7">
+        <div class="overflow-hidden rounded-[var(--radius-md)] border border-border bg-ink-950">
+          <div class="flex items-center gap-2 border-b border-border px-4 py-2.5">
+            <span class="h-2 w-2 rounded-full bg-border-strong" aria-hidden="true"></span>
+            <span class="font-mono text-xs text-text-muted">kubepreflight scan</span>
+          </div>
+          <div class="overflow-x-auto px-4 py-5 font-mono text-[13px] leading-loose">
+            {
+              lines.map((line, i) => (
+                <div class={`terminal-line whitespace-nowrap ${toneClass[line.tone]}`} style={`animation-delay:${i * 260}ms`}>
+                  {line.text}
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </Container>
+</Section>
+
+<style>
+  .terminal-line {
+    opacity: 0;
+    transform: translateY(4px);
+    animation: reveal-line 420ms var(--ease-out) forwards;
+  }
+
+  @keyframes reveal-line {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal-line {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

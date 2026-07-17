@@ -1,0 +1,56 @@
+---
+import Container from '../layout/Container.astro';
+import Section from '../layout/Section.astro';
+import IconLink from '../ui/IconLink.astro';
+
+const layers = [
+  {
+    index: '01',
+    title: 'Upgrade readiness scoring',
+    description:
+      'Scans manifests and live cluster state against the target Kubernetes version — deprecated APIs, removed fields, webhook compatibility — into one comparable score.',
+    href: '/use-cases',
+    linkLabel: 'See the upgrade planning workflow'
+  },
+  {
+    index: '02',
+    title: 'EKS rollback assessment',
+    description:
+      'Before you upgrade, know whether you can go back. Checks control-plane rollback eligibility, version skew, and node group compatibility ahead of time.',
+    href: '/case-study/eks-1-31-to-1-32',
+    linkLabel: 'Read the rollback evidence'
+  },
+  {
+    index: '03',
+    title: 'CI regression gate',
+    description:
+      'Wire the same evaluation into pull requests. Block merges when readiness regresses, with the score and blockers posted directly on the check.',
+    href: '/github-action',
+    linkLabel: 'View the GitHub Action'
+  }
+];
+---
+
+<Section tone="ink-raised">
+  <Container>
+    <div class="max-w-2xl">
+      <span class="font-mono text-xs uppercase tracking-wide text-text-muted">What it evaluates</span>
+      <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Three layers, one recommendation.</h2>
+    </div>
+
+    <div class="mt-14 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-md)] border border-border bg-border md:grid-cols-3">
+      {
+        layers.map((layer) => (
+          <div class="flex flex-col bg-ink-950 p-8">
+            <span class="font-mono text-sm text-signal">{layer.index}</span>
+            <h3 class="mt-4 font-editorial text-xl text-text-primary">{layer.title}</h3>
+            <p class="mt-3 flex-1 text-sm leading-relaxed text-text-muted">{layer.description}</p>
+            <IconLink href={layer.href} class="mt-6">
+              {layer.linkLabel}
+            </IconLink>
+          </div>
+        ))
+      }
+    </div>
+  </Container>
+</Section>

@@ -3,10 +3,11 @@ interface Props {
   id?: string;
   tone?: 'ink' | 'ink-raised' | 'paper';
   spacing?: 'md' | 'lg';
+  border?: boolean;
   class?: string;
 }
 
-const { id, tone = 'ink', spacing = 'lg', class: className = '' } = Astro.props;
+const { id, tone = 'ink', spacing = 'lg', border = true, class: className = '' } = Astro.props;
 
 const tones: Record<NonNullable<Props['tone']>, string> = {
   ink: 'bg-ink-950 text-text-primary',
@@ -20,6 +21,6 @@ const spacings: Record<NonNullable<Props['spacing']>, string> = {
 };
 ---
 
-<section id={id} class={`border-b border-border ${tones[tone]} ${spacings[spacing]} ${className}`}>
+<section id={id} class={`${border ? 'border-b border-border' : ''} ${tones[tone]} ${spacings[spacing]} ${className}`}>
   <slot />
 </section>
