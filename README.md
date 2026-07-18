@@ -9,6 +9,12 @@ Marketing and evidence site for [KubePreflight](https://github.com/imneeteeshyad
 **Live site:** [kubepreflight.com](https://kubepreflight.com)
 **Core repository:** [imneeteeshyadav98/kubepreflight](https://github.com/imneeteeshyadav98/kubepreflight)
 
+<p align="center">
+  <img src="docs/assets/kubepreflight-site-tour.gif" alt="A tour of the KubePreflight website: the homepage, the real EKS 1.31-to-1.32 evidence panel, use cases, the GitHub Action regression gate, the full case study, and the security page's read-only boundaries." width="820" />
+</p>
+
+<p align="center"><sub>Homepage → real evidence → CI regression gate → case study → security. Captured from production at <a href="https://kubepreflight.com">kubepreflight.com</a>. For the CLI/Console demo against real EKS case-study evidence, see the <a href="https://github.com/imneeteeshyadav98/kubepreflight">core repository</a>.</sub></p>
+
 ## Stack
 
 - [Astro](https://astro.build) — static output, minimal client JavaScript
