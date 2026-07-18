@@ -27,6 +27,7 @@ const sourceFiles = [
   'src/pages/eks-upgrade-readiness.astro',
   'src/pages/kubernetes-upgrade-checklist.astro',
   'src/pages/kubernetes-deprecated-api-checker.astro',
+  'src/pages/eks-rollback-readiness.astro',
   'src/pages/install.astro',
   'src/pages/use-cases.astro',
   'src/pages/github-action.astro',
@@ -145,6 +146,31 @@ check(
 check(
   'kubernetes-deprecated-api-checker.astro: uses Cloudflare-safe CodeBlock for command example',
   apiChecker.includes('<CodeBlock') && apiChecker.includes('copyLabel="Copy scan command"')
+);
+
+// --- SEO-001D: EKS rollback readiness guide ---
+const rollbackGuide = read('src/pages/eks-rollback-readiness.astro');
+for (const phrase of [
+  'EKS Rollback Readiness Guide',
+  'Eligibility',
+  'Readiness',
+  'Recommendation',
+  'rollback_preferred',
+  'fix_forward_preferred',
+  'operator_decision_required',
+  'do_not_proceed',
+  'It does not execute an EKS rollback, and technical eligibility alone is not a safety guarantee',
+  'Rollback assessment currently requires --provider eks'
+]) {
+  check(`eks-rollback-readiness.astro: required phrase present: ${phrase}`, rollbackGuide.includes(phrase));
+}
+check(
+  'eks-rollback-readiness.astro: current release does not claim version command support',
+  !/kubepreflight\s+(--version|version)/.test(rollbackGuide)
+);
+check(
+  'eks-rollback-readiness.astro: uses Cloudflare-safe CodeBlock for command examples',
+  rollbackGuide.includes('<CodeBlock') && rollbackGuide.includes('copyLabel="Copy rollback plan command"')
 );
 
 // --- Fix #1 / #2: comparison PASS vs upgrade-readiness, strict vs comparison gate ---
