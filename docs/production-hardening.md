@@ -53,3 +53,21 @@ Manual browser audit targets:
 - Reduced-motion mode disables transitions and smooth scrolling.
 - Lighthouse targets: Accessibility >= 95, Best Practices >= 95, SEO >= 95, Performance >= 90.
 - Use the headers in `docs/security-headers.md` on the production host.
+
+### Accepted SEO exception: Cloudflare `Content-Signal`
+
+Production (`kubepreflight.com`) runs behind Cloudflare, which injects a
+`Content-Signal: search=yes,ai-train=no,use=reference` line into
+`robots.txt` at the edge — not something in this repo's `public/robots.txt`.
+It's a deliberate choice: search crawling stays allowed, AI-training use
+stays restricted. Lighthouse's robots.txt parser doesn't yet recognize that
+directive and flags it as an "Unknown directive," which costs 8 SEO points
+on every page (95 -> 92) for a line that isn't actually broken.
+
+`scripts/check-lighthouse.mjs` (via `scripts/lighthouse-seo-exception.mjs`)
+carries a narrow, hostname-scoped exception for exactly this case — see
+that file's header comment for the exact conditions. The global SEO
+threshold stays 95 for every other host and every other SEO failure; a
+missing canonical, a broken title, or a genuinely malformed `robots.txt`
+still fails the check on production too. Covered by
+`npm run test:lighthouse-seo-exception`.
