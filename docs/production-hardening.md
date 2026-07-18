@@ -10,23 +10,9 @@ LIGHTHOUSE_BASE_URL=http://127.0.0.1:4322 npm run check:lighthouse
 git diff --check
 ```
 
-GitHub Pages repository settings:
-
-- Source: GitHub Actions
-- Custom domain after the first deployment: `kubepreflight.com`
-- Enforce HTTPS after the certificate becomes available
-
-DNS records:
-
-```text
-A      @     185.199.108.153
-A      @     185.199.109.153
-A      @     185.199.110.153
-A      @     185.199.111.153
-CNAME  www   imneeteeshyadav98.github.io
-```
-
-Do not configure an A record and CNAME for the same host.
+Production hosting is a DigitalOcean droplet behind Cloudflare, not GitHub
+Pages — deployment setup, the droplet bootstrap runbook, and the GitHub
+Actions secrets it needs are in `docs/deployment.md`.
 
 Run after production deployment:
 
