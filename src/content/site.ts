@@ -1,9 +1,32 @@
-// The current verified KubePreflight release every version-pinned command
-// on the site derives from. Set via PUBLIC_KUBEPREFLIGHT_VERSION (see
-// .env.example) so a future release only needs an env var change + redeploy
-// — never a source edit. Falls back to the last release wired in here if the
-// env var isn't set, so local dev and CI never break silently.
-const currentVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v0.14.0';
+// These three version constants are semantically different and must not be
+// collapsed into one "current version" — see docs/version-references.md.
+//
+// - latestReleaseVersion: what install/Docker/GitHub Action *example*
+//   commands are pinned to. Tracks new releases automatically.
+// - verifiedEKSReleaseVersion: the release actually validated end-to-end
+//   against a real EKS cluster. "Verified against real EKS upgrades" copy
+//   must use this, not latestReleaseVersion — bump it only when a new
+//   real-EKS validation ships, never automatically.
+// - caseStudyVersion: the exact release that produced the EKS 1.31 -> 1.32
+//   case-study evidence. Permanently pinned to that evidence capture; never
+//   rewrite it just to match the other two constants.
+//
+// All three happen to be the same value today (v0.14.0 is simultaneously
+// the latest release, the verified-EKS release, and the case-study
+// release) — that's a coincidence of where the project is right now, not a
+// guarantee. The next release that ships without a fresh EKS validation
+// will make latestReleaseVersion diverge from the other two, which is
+// exactly what these being separate constants protects against.
+
+// Tracks new releases. Set via PUBLIC_KUBEPREFLIGHT_VERSION (see
+// .env.example) so a future release only needs an env var change +
+// redeploy — never a source edit. Falls back to the last release wired in
+// here if the env var isn't set, so local dev and CI never break silently.
+const latestReleaseVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v0.14.0';
+
+// Fixed historical facts, deliberately NOT env-driven — see comment above.
+const verifiedEKSReleaseVersion = 'v0.14.0';
+const caseStudyVersion = 'v0.14.0';
 
 export const site = {
   name: 'KubePreflight',
@@ -22,10 +45,14 @@ export const site = {
   releasesUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/releases',
   issuesUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/issues',
   securityDisclosureUrl: 'https://github.com/imneeteeshyadav98/kubepreflight/security/advisories/new',
-  currentVersion,
+  latestReleaseVersion,
   // Same release, without the leading "v" — the shape ghcr.io Docker tags use.
   // Derived, not a second env var, so the two can never drift out of sync.
-  currentDockerTag: currentVersion.replace(/^v/, ''),
+  latestDockerTag: latestReleaseVersion.replace(/^v/, ''),
+  verifiedEKSReleaseVersion,
+  caseStudyVersion,
+  repositoryOwner: 'imneeteeshyadav98',
+  repositoryName: 'kubepreflight',
   ogImage: '/og/default.svg',
   locale: 'en-US',
   twitterHandle: undefined as string | undefined

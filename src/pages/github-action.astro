@@ -8,17 +8,24 @@ import IconLink from '../components/ui/IconLink.astro';
 import CodeBlock from '../components/ui/CodeBlock.astro';
 import { site } from '../content/site';
 
-const VERSION = site.currentVersion;
+const VERSION = site.latestReleaseVersion;
 
-const basicScan = `- uses: imneeteeshyadav98/kubepreflight@${VERSION}
-  with:
-    target-version: '1.36'
-    manifests: './deploy'
-    manifests-only: 'true'`;
+const basicScan = `permissions:
+  contents: read
+
+steps:
+  - uses: ${site.repositoryOwner}/${site.repositoryName}@${VERSION}
+    with:
+      target-version: '1.36'
+      manifests: './deploy'
+      manifests-only: 'true'`;
 
 const prGateWorkflow = `name: kubepreflight-pr-gate
 on:
   pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   compare:
@@ -29,7 +36,7 @@ jobs:
           ref: \${{ github.event.pull_request.base.sha }}
           path: base
 
-      - uses: imneeteeshyadav98/kubepreflight@${VERSION}
+      - uses: ${site.repositoryOwner}/${site.repositoryName}@${VERSION}
         id: baseline
         with:
           target-version: '1.36'
@@ -42,7 +49,7 @@ jobs:
           ref: \${{ github.event.pull_request.head.sha }}
           path: head
 
-      - uses: imneeteeshyadav98/kubepreflight@${VERSION}
+      - uses: ${site.repositoryOwner}/${site.repositoryName}@${VERSION}
         id: current
         with:
           target-version: '1.36'
@@ -50,7 +57,7 @@ jobs:
           manifests-only: 'true'
           findings-out: 'current-findings.json'
 
-      - uses: imneeteeshyadav98/kubepreflight/compare@${VERSION}
+      - uses: ${site.repositoryOwner}/${site.repositoryName}/compare@${VERSION}
         with:
           baseline: \${{ steps.baseline.outputs.findings-file }}
           current: \${{ steps.current.outputs.findings-file }}`;
@@ -109,7 +116,7 @@ reasons                (empty — nothing regressed)`;
 
       <p class="mt-6 max-w-2xl text-lg leading-relaxed text-text-muted">
         The same read-only <span class="font-mono text-text-primary">scan</span> you'd run locally,
-        wired into CI as a job pass/fail decision — plus a sibling action that gates a PR on
+        wired into CI as a job pass/fail decision — plus a sibling action that gates a PR on{' '}
         <em>regressions</em>, not just a single scan's absolute state.
       </p>
     </Container>
@@ -123,6 +130,12 @@ reasons                (empty — nothing regressed)`;
         <p class="mt-4 leading-relaxed text-text-muted">
           A manifest-only scan needs no cluster or AWS credentials in CI — good for gating every
           pull request that touches manifests.
+        </p>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          This strict gate fails on any Blocker verdict, including ones that already existed before
+          the pull request. If your environment carries known, accepted findings, use the comparison
+          gate below instead — it fails only when a pull request makes readiness worse, not on
+          pre-existing problems.
         </p>
       </div>
       <CodeBlock
@@ -155,6 +168,13 @@ reasons                (empty — nothing regressed)`;
         kind="command"
         copyLabel="Copy PR-gate workflow YAML"
       />
+      <p class="mt-6 max-w-2xl text-sm leading-relaxed text-text-muted">
+        Pin KubePreflight to a released version, as shown above, in production workflows.
+        Organizations with stricter supply-chain policies may pin the action to a verified commit
+        SHA instead — a tag can be moved by anyone with write access to the repository, while a SHA
+        cannot, though a SHA pin loses the human-readable version number and must be updated
+        manually for every new release.
+      </p>
     </Container>
   </Section>
 
@@ -222,6 +242,12 @@ reasons                (empty — nothing regressed)`;
           <p class="mt-4 leading-relaxed text-text-muted">
             Run the compare action on the EKS 1.31 → 1.32 case study's own baseline and current
             scans, and this is the gate output it produces.
+          </p>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            <span class="font-mono text-text-primary">pass</span> means the pull request introduced
+            no readiness regression. It does not mean the cluster is ready to upgrade — existing
+            blockers may still require remediation. In this case study, the gate passed while the
+            cluster's own recommendation was still <span class="font-mono text-text-primary">do_not_proceed</span>.
           </p>
           <IconLink href="/case-study/eks-1-31-to-1-32" class="mt-6">
             Read the full case study

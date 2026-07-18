@@ -44,6 +44,8 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     scroll-behavior: smooth;
+    /* Header is sticky at h-16 (4rem); keep anchor targets clear of it. */
+    scroll-padding-top: 5rem;
   }
 
   body {

@@ -24,8 +24,10 @@ function isActive(href: string): boolean {
             <a
               href={item.href}
               aria-current={isActive(item.href) ? 'page' : undefined}
-              class={`text-sm transition-colors duration-150 ${
-                isActive(item.href) ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'
+              class={`border-b-2 pb-1 text-sm transition-colors duration-150 ${
+                isActive(item.href)
+                  ? 'border-signal text-text-primary'
+                  : 'border-transparent text-text-muted hover:text-text-primary'
               }`}
               {...(item.external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
             >
@@ -60,7 +62,8 @@ function isActive(href: string): boolean {
               <li>
                 <a
                   href={item.href}
-                  class="block text-sm text-text-primary"
+                  aria-current={isActive(item.href) ? 'page' : undefined}
+                  class={`block text-sm ${isActive(item.href) ? 'text-text-primary' : 'text-text-muted'}`}
                   {...(item.external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
                 >
                   {item.label}

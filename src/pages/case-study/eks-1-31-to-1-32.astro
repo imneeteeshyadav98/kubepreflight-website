@@ -10,6 +10,7 @@ import CodeBlock from '../../components/ui/CodeBlock.astro';
 import IconLink from '../../components/ui/IconLink.astro';
 import beforeRemediationConsole from '../../assets/case-study/before-remediation-console.png';
 import rollbackAssessmentConsole from '../../assets/case-study/rollback-assessment-console.png';
+import { site } from '../../content/site';
 
 const stats = [
   { label: 'Findings resolved', value: '9' },
@@ -37,7 +38,7 @@ Confidence             high`;
 
 <BaseLayout
   title="EKS 1.31 → 1.32 case study"
-  description="Real KubePreflight v0.14.0 evidence from an EKS 1.31 to 1.32 upgrade: readiness moved from 19 to 57, six blockers resolved, zero new blockers, rollback eligible — and a do_not_proceed recommendation."
+  description={`Real KubePreflight ${site.caseStudyVersion} evidence from an EKS 1.31 to 1.32 upgrade: readiness moved from 19 to 57, six blockers resolved, zero new blockers, rollback eligible — and a do_not_proceed recommendation.`}
 >
   <Section tone="ink" spacing="md">
     <Container>
@@ -47,7 +48,7 @@ Confidence             high`;
 
       <div class="mt-8 flex flex-wrap items-center gap-3">
         <Badge tone="blue">Case study</Badge>
-        <Badge tone="neutral">v0.14.0</Badge>
+        <Badge tone="neutral">{site.caseStudyVersion}</Badge>
       </div>
 
       <h1 class="mt-5 max-w-3xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
@@ -55,9 +56,11 @@ Confidence             high`;
       </h1>
 
       <p class="mt-6 max-w-2xl text-lg leading-relaxed text-text-muted">
-        A real EKS cluster, evaluated end to end with KubePreflight v0.14.0 — before any upgrade
-        action was taken. This is the unedited outcome: what changed, what didn't, and why the
-        recommendation was still <span class="font-mono text-text-primary">do_not_proceed</span>.
+        A real EKS cluster, evaluated end to end with KubePreflight {site.caseStudyVersion} — before
+        any upgrade action was taken. This is the original operational outcome: infrastructure
+        identifiers were sanitized, but the findings, scores, decisions, and recommendation below
+        were not altered. Here's what changed, what didn't, and why the recommendation was still{' '}
+        <span class="font-mono text-text-primary">do_not_proceed</span>.
       </p>
     </Container>
   </Section>
@@ -82,6 +85,14 @@ Confidence             high`;
           <Badge tone="signal">Rollback eligible</Badge>
           <Badge tone="amber">Recommendation: do_not_proceed</Badge>
         </div>
+
+        <p class="mt-6 border-t border-border pt-6 text-sm leading-relaxed text-text-muted">
+          <span class="font-mono text-text-primary">Comparison gate: pass</span> means this run
+          introduced no new regressions against the baseline — it does not mean the cluster was
+          ready to upgrade. The separate recommendation above,{' '}
+          <span class="font-mono text-text-primary">do_not_proceed</span>, is the operational
+          readiness call; the existing blockers it reflects still needed remediation.
+        </p>
       </div>
 
       <figure class="mt-10">
