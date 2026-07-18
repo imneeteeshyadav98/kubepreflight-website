@@ -1,0 +1,343 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/layout/Container.astro';
+import Section from '../components/layout/Section.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import IconLink from '../components/ui/IconLink.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import { site } from '../content/site';
+
+const DOCKER_TAG = site.latestDockerTag;
+const dockerImage = `ghcr.io/${site.repositoryOwner}/${site.repositoryName}:${DOCKER_TAG}`;
+
+const exitCodes = [
+  ['0', 'Clean', 'No blockers or warnings.'],
+  ['1', 'Warnings only', 'Review before proceeding, especially in CI.'],
+  ['2', 'Blockers found', 'Treat as a failed readiness gate.'],
+  ['3', 'Evidence incomplete', 'Requested evidence could not be fully collected -- do not treat as clean.'],
+  ['4', 'Execution failure', 'Failed before a trustworthy report existed, e.g. kubeconfig or collector failure.']
+];
+
+const genericCi = `set +e
+docker run --rm -v "$PWD:/work" -w /work ${dockerImage} scan \\
+  --manifests-only \\
+  --manifests ./deploy \\
+  --target-version 1.32 \\
+  --output all \\
+  --output-dir ./kubepreflight-report
+status=$?
+set -e
+
+case "$status" in
+  0) echo "KubePreflight clean";;
+  1) echo "KubePreflight warnings present";;
+  2) echo "KubePreflight blockers present"; exit 1;;
+  3) echo "KubePreflight evidence incomplete"; exit 1;;
+  4) echo "KubePreflight execution failed before a trustworthy report was produced"; exit 1;;
+  *) echo "Unexpected KubePreflight exit code: $status"; exit 1;;
+esac`;
+
+const gitlabCi = `kubepreflight-scan:
+  stage: test
+  image:
+    name: ${dockerImage}
+    entrypoint: [""]
+  script:
+    - /usr/local/bin/kubepreflight scan --manifests-only --manifests ./deploy --target-version 1.32 --output all
+  artifacts:
+    when: always
+    paths:
+      - findings.json
+      - report.html`;
+
+const jenkinsfile = `stage('KubePreflight scan') {
+  steps {
+    sh '''
+      set +e
+      docker run --rm -v "$PWD:/work" -w /work ${dockerImage} scan \\
+        --manifests-only --manifests ./deploy --target-version 1.32 --output all
+      status=$?
+      set -e
+      if [ "$status" -eq 2 ] || [ "$status" -ge 3 ]; then
+        exit 1
+      fi
+    '''
+  }
+}`;
+
+const gateChoices = [
+  {
+    title: 'Absolute gate',
+    body: 'Fail the job on any Blocker in a fresh scan. Simple, and the right default for a repo with a clean baseline today.'
+  },
+  {
+    title: 'Comparison gate',
+    body: 'Fail only on new blockers versus a baseline scan. Better for a repo that already carries pre-existing findings you cannot fix in one pull request.'
+  }
+];
+
+const rollout = [
+  'Run the scan in report-only mode first -- upload the artifact, do not fail the build yet.',
+  'Review a week or two of runs to separate real findings from noise.',
+  'Decide absolute vs. comparison gate based on how clean the current baseline actually is.',
+  'Turn on --redact-sensitive-identifiers before any report becomes a build artifact or PR comment.',
+  'Flip the gate to merge-blocking once the team trusts the signal.',
+  'Keep reports as evidence -- attach them to the change record, not just the CI log.'
+];
+
+const faqs = [
+  {
+    question: 'Can I gate CI on Kubernetes upgrade readiness without GitHub Actions?',
+    answer:
+      'Yes. The CLI and Docker image return a documented exit code (0-4) that any CI system can branch on -- GitHub Actions, GitLab CI, Jenkins, or a plain shell script all work the same way.'
+  },
+  {
+    question: 'Should I fail the build on any blocker, or only on new ones?',
+    answer:
+      'If your repository is already clean, fail on any blocker. If it already carries pre-existing findings you cannot fix in one pull request, use a comparison gate and fail only on regressions -- otherwise the first gated PR has to fix everything at once.'
+  },
+  {
+    question: 'Does exit code 3 mean the scan passed?',
+    answer:
+      'No. Exit code 3 means requested evidence could not be fully collected. Treat incomplete evidence as an unknown, not a pass -- most pipelines should fail the job on 3 the same way they fail on 2.'
+  },
+  {
+    question: 'Is there an official KubePreflight plugin for Jenkins or GitLab CI?',
+    answer:
+      'No. There is a first-party GitHub Action. For Jenkins, GitLab CI, and other systems, run the CLI or Docker image as an ordinary pipeline step and branch on its exit code -- the same contract the GitHub Action itself uses underneath.'
+  },
+  {
+    question: 'Should scan reports be uploaded as CI artifacts?',
+    answer:
+      'Only with --redact-sensitive-identifiers if the artifact leaves your CI system\'s access boundary -- reports can otherwise contain AWS ARNs, account IDs, and internal node hostnames.'
+  },
+  {
+    question: 'Should the gate run on every pull request or on a schedule?',
+    answer:
+      'Both serve different purposes. A pull-request gate catches a regression before merge. A scheduled scan catches drift that happens outside your manifests -- a managed add-on version change, for example -- between pull requests.'
+  }
+];
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: 'Kubernetes Upgrade CI Guide',
+    description:
+      'Gate pull requests and pipelines on Kubernetes upgrade readiness using a documented exit code contract, with examples for GitHub Actions, GitLab CI, Jenkins, and any CI system.',
+    url: `${site.url}/kubernetes-upgrade-ci-guide`,
+    publisher: {
+      '@type': 'Organization',
+      name: site.name,
+      url: site.url
+    }
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer
+      }
+    }))
+  }
+];
+---
+
+<BaseLayout
+  title="Kubernetes Upgrade CI Guide"
+  description="Gate pull requests and pipelines on Kubernetes upgrade readiness using a documented exit code contract, with examples for GitHub Actions, GitLab CI, Jenkins, and any CI system."
+  structuredData={structuredData}
+>
+  <Section tone="ink" spacing="md">
+    <Container>
+      <a href="/" class="text-sm text-text-muted transition-colors duration-150 hover:text-text-primary">
+        Back to home
+      </a>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <Badge tone="blue">Kubernetes</Badge>
+        <Badge tone="neutral">CI/CD</Badge>
+      </div>
+
+      <h1 class="mt-5 max-w-3xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
+        Kubernetes Upgrade CI Guide
+      </h1>
+
+      <p class="mt-6 max-w-3xl text-lg leading-relaxed text-text-muted">
+        Catch a removed API or a new upgrade blocker in a pull request, not during the maintenance
+        window. One exit code contract, usable from any CI system.
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <Button href="/github-action/">Use the GitHub Action</Button>
+        <Button href="/docs/#exit-codes-ci" variant="secondary">Full exit code reference</Button>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Two ways to gate</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Pick the gate that matches your baseline.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          Both approaches use the same scan and the same exit codes -- the difference is what
+          counts as a failure.
+        </p>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+        {
+          gateChoices.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5">
+              <h3 class="font-mono text-sm text-text-primary">{item.title}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">The contract</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Every CI integration branches on the same five exit codes.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          This is the mechanism every example on this page relies on -- GitHub Actions, GitLab CI,
+          Jenkins, or a plain shell script all read the same exit code.
+        </p>
+      </div>
+
+      <div class="mt-10 overflow-hidden rounded-[var(--radius-md)] border border-border">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[640px] border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-b border-border bg-ink-900">
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Code</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Meaning</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">CI handling</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                exitCodes.map((row, index) => (
+                  <tr class={index < exitCodes.length - 1 ? 'border-b border-border' : ''}>
+                    <td class="px-5 py-4 align-top font-mono text-xs text-text-primary">{row[0]}</td>
+                    <td class="px-5 py-4 align-top font-mono text-xs text-text-muted">{row[1]}</td>
+                    <td class="px-5 py-4 align-top text-text-muted">{row[2]}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Wire it in</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          The same scan, four pipelines.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          There is a first-party GitHub Action for GitHub Actions specifically. For every other
+          system, run the Docker image as an ordinary pipeline step and branch on its exit code --
+          not a dedicated plugin, just the same contract.
+        </p>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-6">
+        <CodeBlock title="Any CI: shell + exit codes" code={genericCi} copyable kind="command" copyLabel="Copy generic CI script" />
+        <CodeBlock title=".gitlab-ci.yml" code={gitlabCi} copyable kind="command" copyLabel="Copy GitLab CI job" />
+        <CodeBlock title="Jenkinsfile stage" code={jenkinsfile} copyable kind="command" copyLabel="Copy Jenkinsfile stage" />
+      </div>
+      <p class="mt-4 text-sm leading-relaxed text-text-muted">
+        Using GitHub Actions?{' '}
+        <a href="/github-action/" class="underline decoration-border underline-offset-2 hover:text-text-primary">
+          The first-party Action
+        </a>{' '}
+        wraps this same scan with PR-comment output and a dedicated comparison-gate mode.
+      </p>
+    </Container>
+  </Section>
+
+  <Section tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">Rollout</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+            Turn on a merge-blocking gate deliberately.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            A gate that blocks merges from day one, before anyone trusts the signal, gets disabled
+            the first time it's inconvenient. Roll it out in stages instead.
+          </p>
+        </div>
+        <ol class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-7">
+          {
+            rollout.map((item, index) => (
+              <li class="rounded-[var(--radius-md)] border border-border-dark p-4 text-sm leading-relaxed text-text-muted-dark">
+                <span class="mr-2 font-mono text-xs text-text-dark">{String(index + 1).padStart(2, '0')}</span>
+                {item}
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">FAQ</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Common Kubernetes upgrade CI questions.
+        </h2>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {
+          faqs.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-6">
+              <h3 class="font-mono text-sm text-text-primary">{item.question}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.answer}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink" border={false}>
+    <Container>
+      <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-xl">
+          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Add a scan to your pipeline.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Start in report-only mode, then flip to a blocking gate once you trust the signal.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <Button href="/github-action/">Use the GitHub Action</Button>
+          <IconLink href="/install/">Install KubePreflight</IconLink>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
