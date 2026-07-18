@@ -20,6 +20,13 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      # Bump the KubePreflight release the site is pinned to by updating this
+      # repository Variable (Settings -> Secrets and variables -> Actions ->
+      # Variables -> KUBEPREFLIGHT_VERSION) and re-running this workflow —
+      # no source change needed. Falls back to the last release wired into
+      # src/content/site.ts if the Variable isn't set.
+      PUBLIC_KUBEPREFLIGHT_VERSION: ${{ vars.KUBEPREFLIGHT_VERSION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

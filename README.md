@@ -69,3 +69,18 @@ Static output, deployed to GitHub Pages, served at `kubepreflight.com`.
 - CI (`.github/workflows/ci.yml`) runs `npm run check` and `npm run build` on every push and pull request.
 - Production deployment (`.github/workflows/deploy.yml`) runs on pushes to `main`, verifies/builds the site, uploads `dist/`, and deploys through GitHub Pages.
 - Custom domain is committed through `public/CNAME`; repository Pages source must be set to GitHub Actions.
+
+### Bumping the pinned KubePreflight release
+
+Every version-pinned command on the site (install, Docker, GitHub Action `uses:` refs) derives
+from one value: `PUBLIC_KUBEPREFLIGHT_VERSION`. Releasing a new version is a variable change, not
+a source edit:
+
+- **Production**: update the `KUBEPREFLIGHT_VERSION` repository Variable (Settings → Secrets and
+  variables → Actions → Variables) and re-run the deploy workflow.
+- **Local**: copy `.env.example` to `.env` and set it there; `npm run build`/`npm run dev` pick it
+  up automatically.
+
+If unset, both fall back to the last release wired into `src/content/site.ts`, so a missing
+variable never silently breaks a build. It's a Variable, not a Secret — the value is already
+public in every command the site renders.
