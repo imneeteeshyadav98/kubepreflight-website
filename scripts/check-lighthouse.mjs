@@ -7,7 +7,7 @@ const baseUrl = process.env.LIGHTHOUSE_BASE_URL || process.env.SMOKE_BASE_URL ||
 const hostname = new URL(baseUrl).hostname;
 const chromePath = process.env.CHROME_BIN || undefined;
 
-const paths = ['/', '/docs', '/eks-upgrade-readiness', '/kubernetes-upgrade-checklist', '/kubernetes-deprecated-api-checker', '/install', '/use-cases', '/github-action', '/case-study/eks-1-31-to-1-32', '/security'];
+const paths = ['/', '/docs', '/eks-upgrade-readiness', '/kubernetes-upgrade-checklist', '/kubernetes-deprecated-api-checker', '/eks-rollback-readiness', '/install', '/use-cases', '/github-action', '/case-study/eks-1-31-to-1-32', '/security'];
 
 const thresholds = {
   performance: 90,

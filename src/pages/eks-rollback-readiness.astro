@@ -1,0 +1,366 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/layout/Container.astro';
+import Section from '../components/layout/Section.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import IconLink from '../components/ui/IconLink.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import { site } from '../content/site';
+
+const rollbackPlan = `kubepreflight rollback plan \\
+  --provider eks \\
+  --cluster-name my-cluster \\
+  --redact-sensitive-identifiers \\
+  --output all`;
+
+const rollbackAssess = `kubepreflight rollback assess \\
+  --provider eks \\
+  --cluster-name my-cluster \\
+  --findings findings.json \\
+  --redact-sensitive-identifiers \\
+  --output all`;
+
+const signals = [
+  {
+    title: 'Eligibility',
+    body: 'Can the control plane technically go back? eligible, unavailable, or unknown -- tied to the EKS rollback window and how much of it remains.'
+  },
+  {
+    title: 'Readiness',
+    body: 'Should you, given current cluster and workload evidence? ready, blocked, high_risk, or insufficient_evidence -- with a blocker/warning/unknown count behind it.'
+  },
+  {
+    title: 'Recommendation',
+    body: 'rollback_preferred, fix_forward_preferred, operator_decision_required, or do_not_proceed, each with a confidence level (high, medium, low), not a single yes/no.'
+  }
+];
+
+const riskAreas = [
+  {
+    title: 'Upgrade history and window',
+    items: [
+      'Whether upgrade history is available at all',
+      'Rollback window expired or nearing expiry',
+      'Whether the previous version is actually N-1'
+    ]
+  },
+  {
+    title: 'EKS platform constraints',
+    items: [
+      'Cluster not in an active state',
+      'Rollback target unsupported or requiring extended support',
+      'An upgrade policy that disallows the rollback target',
+      'End-of-extended-support auto-upgrade already applied'
+    ]
+  },
+  {
+    title: 'EKS Upgrade Insights',
+    items: [
+      'Insights unavailable for this cluster',
+      'Insights data is stale',
+      'Insights actively blocking the rollback path'
+    ]
+  },
+  {
+    title: 'Node groups and compute',
+    items: [
+      'Managed node group rollback required',
+      'Self-managed node evidence unavailable',
+      'Self-managed node rollback required',
+      'Worker nodes that would remain newer than the control plane',
+      'EKS Auto Mode disruption risk',
+      'Fargate pod recreation risk'
+    ]
+  },
+  {
+    title: 'Add-ons',
+    items: [
+      'Managed add-on rollback required',
+      'Managed add-on compatibility unknown at the rollback target',
+      'Self-managed add-on compatibility unknown'
+    ]
+  },
+  {
+    title: 'Workload and API risk',
+    items: [
+      'New-version API adoption risk',
+      'CRD, conversion webhook, or controller risk',
+      'PodDisruptionBudget disruption constraints',
+      'Unhealthy workloads already present'
+    ]
+  },
+  {
+    title: 'Observability',
+    items: [
+      'Observability evidence missing',
+      'Application health unknown from available signals'
+    ]
+  }
+];
+
+const faqs = [
+  {
+    question: 'What is EKS rollback readiness?',
+    answer:
+      'It is an assessment of whether rolling back an Amazon EKS control plane is both technically eligible (the rollback window, version, and cluster state allow it) and operationally advisable (workload, node, add-on, and observability evidence support it).'
+  },
+  {
+    question: 'Is rollback eligibility the same as being ready to roll back?',
+    answer:
+      'No. Eligibility answers whether EKS will technically allow the rollback. Readiness and the resulting recommendation answer whether the available evidence supports actually doing it -- a cluster can be eligible and still get a do_not_proceed recommendation.'
+  },
+  {
+    question: 'What is the difference between rollback plan and rollback assess?',
+    answer:
+      'rollback plan is a pre-upgrade posture check, run before you upgrade, so you know your rollback options going in. rollback assess is the post-upgrade readiness check, and can include a recent findings.json for operational context.'
+  },
+  {
+    question: 'Does KubePreflight perform the EKS rollback?',
+    answer:
+      'No. KubePreflight assesses and explains rollback eligibility and readiness. It does not execute an EKS rollback, and technical eligibility alone is not a safety guarantee.'
+  },
+  {
+    question: 'Can a cluster be rollback-eligible but still unsafe to roll back?',
+    answer:
+      'Yes. EKS can technically allow the rollback while node group, add-on, workload, or observability evidence points the other way -- which is exactly what the readiness and recommendation signals are for.'
+  },
+  {
+    question: 'Does KubePreflight support rollback assessment for AKS or GKE?',
+    answer:
+      'No. Rollback assessment currently requires --provider eks. Kubernetes-only readiness scanning works without a cloud provider; AKS and GKE enrichment are recognized flags but not yet implemented.'
+  }
+];
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: 'EKS Rollback Readiness Guide',
+    description:
+      'Understand Amazon EKS rollback eligibility, readiness, and recommendation signals, what affects them, and how to assess rollback posture before and after an upgrade.',
+    url: `${site.url}/eks-rollback-readiness`,
+    publisher: {
+      '@type': 'Organization',
+      name: site.name,
+      url: site.url
+    }
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer
+      }
+    }))
+  }
+];
+---
+
+<BaseLayout
+  title="EKS Rollback Readiness Guide"
+  description="Understand Amazon EKS rollback eligibility, readiness, and recommendation signals, what affects them, and how to assess rollback posture before and after an upgrade."
+  structuredData={structuredData}
+>
+  <Section tone="ink" spacing="md">
+    <Container>
+      <a href="/" class="text-sm text-text-muted transition-colors duration-150 hover:text-text-primary">
+        Back to home
+      </a>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <Badge tone="blue">Amazon EKS</Badge>
+        <Badge tone="neutral">Rollback readiness</Badge>
+      </div>
+
+      <h1 class="mt-5 max-w-3xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
+        EKS Rollback Readiness Guide
+      </h1>
+
+      <p class="mt-6 max-w-3xl text-lg leading-relaxed text-text-muted">
+        Eligible to roll back is not the same question as ready to roll back. Assess both before
+        you need the answer under pressure.
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <Button href="/docs/#rollback-readiness">Run a rollback assessment</Button>
+        <Button href="/case-study/eks-1-31-to-1-32/" variant="secondary">See a real rollback decision</Button>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Three separate questions</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Can you, should you, and what do you do about it.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          "Can I still roll back?" and "should I roll back?" have different answers. Treating a
+          technically eligible rollback as automatically safe is the mistake this assessment exists
+          to catch.
+        </p>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+        {
+          signals.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5">
+              <h3 class="font-mono text-sm text-text-primary">{item.title}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">What moves the signal</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Seven areas behind the recommendation.
+        </h2>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+        {
+          riskAreas.map((area) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5">
+              <h3 class="font-mono text-sm text-text-primary">{area.title}</h3>
+              <ul class="mt-3 space-y-2">
+                {area.items.map((item) => (
+                  <li class="flex gap-2 text-sm leading-relaxed text-text-muted">
+                    <span aria-hidden="true" class="mt-1 text-signal">&#8226;</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">Pre- vs. post-upgrade</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+            Assess before you go in, then again after.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            <span class="font-mono text-text-dark">rollback plan</span> is a pre-upgrade posture
+            check -- run it before opening the window, so rollback options are known going in, not
+            discovered mid-incident.
+          </p>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            <span class="font-mono text-text-dark">rollback assess</span> is the post-upgrade
+            readiness check, and can take a recent{' '}
+            <span class="font-mono text-text-dark">findings.json</span> for operational context.
+          </p>
+          <p class="mt-4 text-sm leading-relaxed text-text-muted-dark">
+            Both are read-only. KubePreflight does not execute an EKS rollback, and technical
+            eligibility alone is not a safety guarantee.
+          </p>
+        </div>
+        <div class="lg:col-span-7 flex flex-col gap-6">
+          <CodeBlock
+            title="pre-upgrade rollback posture"
+            code={rollbackPlan}
+            copyable
+            kind="command"
+            copyLabel="Copy rollback plan command"
+          />
+          <CodeBlock
+            title="post-upgrade rollback readiness"
+            code={rollbackAssess}
+            copyable
+            kind="command"
+            copyLabel="Copy rollback assess command"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-7">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Real evidence</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Eligible, blocked, do not proceed -- from a real cluster.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            In the EKS 1.31 to 1.32 case study, EKS technically allowed rollback, but readiness came
+            back blocked and the recommendation was do_not_proceed -- six blockers had been
+            resolved and zero new ones appeared, but the remaining evidence still did not support
+            proceeding.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-x-6 gap-y-3">
+            <IconLink href="/case-study/eks-1-31-to-1-32/">Read the full case study</IconLink>
+            <IconLink href="/kubernetes-upgrade-checklist/">See the upgrade checklist</IconLink>
+          </div>
+        </div>
+        <div class="lg:col-span-5">
+          <div class="flex flex-wrap items-center gap-3">
+            <Badge tone="signal">eligible</Badge>
+            <span aria-hidden="true" class="text-text-muted">&rarr;</span>
+            <Badge tone="amber">blocked</Badge>
+            <span aria-hidden="true" class="text-text-muted">&rarr;</span>
+            <Badge tone="neutral">do_not_proceed</Badge>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">FAQ</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Common EKS rollback readiness questions.
+        </h2>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {
+          faqs.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-6">
+              <h3 class="font-mono text-sm text-text-primary">{item.question}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.answer}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink" border={false}>
+    <Container>
+      <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-xl">
+          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Know your rollback posture before you need it.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Run a pre-upgrade rollback plan, then re-assess after -- both are read-only against your
+            cluster.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <Button href="/docs/#rollback-readiness">Run a rollback assessment</Button>
+          <IconLink href="/eks-upgrade-readiness/">Read the EKS upgrade guide</IconLink>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
