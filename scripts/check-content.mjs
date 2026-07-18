@@ -28,6 +28,7 @@ const sourceFiles = [
   'src/pages/kubernetes-upgrade-checklist.astro',
   'src/pages/kubernetes-deprecated-api-checker.astro',
   'src/pages/eks-rollback-readiness.astro',
+  'src/pages/kubernetes-upgrade-ci-guide.astro',
   'src/pages/install.astro',
   'src/pages/use-cases.astro',
   'src/pages/github-action.astro',
@@ -171,6 +172,35 @@ check(
 check(
   'eks-rollback-readiness.astro: uses Cloudflare-safe CodeBlock for command examples',
   rollbackGuide.includes('<CodeBlock') && rollbackGuide.includes('copyLabel="Copy rollback plan command"')
+);
+
+// --- SEO-001E: Kubernetes upgrade CI guide ---
+const ciGuide = read('src/pages/kubernetes-upgrade-ci-guide.astro');
+for (const phrase of [
+  'Kubernetes Upgrade CI Guide',
+  'Absolute gate',
+  'Comparison gate',
+  '.gitlab-ci.yml',
+  'Jenkinsfile stage',
+  'There is a first-party GitHub Action for GitHub Actions specifically'
+]) {
+  check(`kubernetes-upgrade-ci-guide.astro: required phrase present: ${phrase}`, ciGuide.includes(phrase));
+}
+check(
+  'kubernetes-upgrade-ci-guide.astro: no fabricated official Jenkins/GitLab plugin claim',
+  ciGuide.includes('There is a first-party GitHub Action. For Jenkins, GitLab CI, and other systems, run the CLI or Docker image as an ordinary pipeline step')
+);
+check(
+  'kubernetes-upgrade-ci-guide.astro: current release does not claim version command support',
+  !/kubepreflight\s+(--version|version)/.test(ciGuide)
+);
+check(
+  'kubernetes-upgrade-ci-guide.astro: docker examples invoke docker run, not the image as a bare command',
+  ciGuide.includes('docker run --rm') && ciGuide.includes('entrypoint: [""]')
+);
+check(
+  'kubernetes-upgrade-ci-guide.astro: uses Cloudflare-safe CodeBlock for command examples',
+  ciGuide.includes('<CodeBlock') && ciGuide.includes('copyLabel="Copy generic CI script"')
 );
 
 // --- Fix #1 / #2: comparison PASS vs upgrade-readiness, strict vs comparison gate ---
