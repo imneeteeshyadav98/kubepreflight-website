@@ -27,16 +27,18 @@ const cards = [
         See KubePreflight run against a disposable EKS cluster.
       </h2>
       <p class="mt-4 leading-relaxed text-text-muted">
-        Follow a real read-only scan from cluster evidence to terminal verdict, remediation,
-        comparison, and the embedded Console. The cluster was created, scanned, and destroyed in
-        one session — see <a href={`${site.githubUrl}/tree/master/demo/live-eks`} class="underline decoration-border underline-offset-2 hover:text-text-primary" target="_blank" rel="noreferrer noopener">demo/live-eks</a> to reproduce it yourself.
+        A real read-only scan against a disposable EKS cluster, with{' '}
+        <code class="font-mono text-text-primary">--redact-sensitive-identifiers</code> on — the
+        verdict, the local report server it starts, and the embedded Console it opens to. The
+        cluster was created, scanned, and destroyed in one session — see{' '}
+        <a href={`${site.githubUrl}/tree/master/demo/live-eks`} class="underline decoration-border underline-offset-2 hover:text-text-primary" target="_blank" rel="noreferrer noopener">demo/live-eks</a> to reproduce it yourself.
       </p>
     </div>
 
     <div class="mt-10 overflow-hidden rounded-[var(--radius-md)] border border-border">
       <img
-        src="/media/kubepreflight-live-eks-scan.gif"
-        alt="Terminal running kubectl get nodes against a real, disposable EKS cluster, then kubepreflight scan, printing a live BLOCKED verdict with real blockers and warnings."
+        src="/media/kubepreflight-flagship-demo.gif"
+        alt="Terminal running kubepreflight scan with --redact-sensitive-identifiers against a real, disposable EKS cluster, printing a BLOCKED verdict and the local report/Console server URLs, followed by the embedded Console: summary, findings list, and one finding's evidence and remediation detail."
         loading="lazy"
         decoding="async"
         width="1100"
