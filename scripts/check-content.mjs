@@ -40,6 +40,17 @@ for (const file of sourceFiles) {
   check(`${file}: no hardcoded repository owner (must reference site.repositoryOwner)`, !content.includes('imneeteeshyadav98'));
 }
 
+const siteConfig = readRaw('src/content/site.ts');
+check('site.ts: latest release fallback is v0.15.0-redaction', siteConfig.includes("'v0.15.0-redaction'"));
+check('site.ts: v0.15.0-redaction supports redaction', siteConfig.includes('supportsRedaction: true'));
+check('site.ts: v0.15.0-redaction does not claim version command support', siteConfig.includes('supportsVersionCommand: false'));
+check('site.ts: Docker tag is derived without leading v', siteConfig.includes("latestReleaseVersion.replace(/^v/, '')"));
+
+const codeBlock = readRaw('src/components/ui/CodeBlock.astro');
+check('CodeBlock.astro: rendered @ signs are entity-escaped to avoid Cloudflare rewriting', codeBlock.includes("replace(/@/g, '&#64;')"));
+check('CodeBlock.astro: copy text is stored encoded, not as raw owner/repo@tag HTML', codeBlock.includes('data-copy-text-b64'));
+check('CodeBlock.astro: copy text decodes through TextDecoder', codeBlock.includes('new TextDecoder().decode'));
+
 // --- Fix #1 / #2: comparison PASS vs upgrade-readiness, strict vs comparison gate ---
 const githubAction = read('src/pages/github-action.astro');
 check(
@@ -119,4 +130,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`Content checks passed: ${sourceFiles.length} files scanned for stale references, 8 semantic-fix assertions verified.`);
+console.log(`Content checks passed: ${sourceFiles.length} files scanned for stale references and semantic assertions.`);

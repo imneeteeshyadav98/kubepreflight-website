@@ -21,7 +21,7 @@ const actionYaml = `permissions:
   contents: read
 
 steps:
-  - uses: ${site.repositoryOwner}/${site.repositoryName}/compare@${site.latestReleaseVersion}
+  - uses: ${site.repositoryOwner}/${site.repositoryName}/compare@${site.latestGitHubActionRef}
     with:
       baseline: baseline-findings.json
       current: current-findings.json

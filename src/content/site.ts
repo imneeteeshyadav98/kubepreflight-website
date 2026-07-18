@@ -11,22 +11,22 @@
 //   case-study evidence. Permanently pinned to that evidence capture; never
 //   rewrite it just to match the other two constants.
 //
-// All three happen to be the same value today (v0.14.0 is simultaneously
-// the latest release, the verified-EKS release, and the case-study
-// release) — that's a coincidence of where the project is right now, not a
-// guarantee. The next release that ships without a fresh EKS validation
-// will make latestReleaseVersion diverge from the other two, which is
-// exactly what these being separate constants protects against.
+// v0.15.0-redaction is the current public release. v0.14.0 remains the
+// real-EKS validation and case-study evidence release. Keeping those facts
+// separate prevents a new release from silently rewriting historical
+// evidence or claiming a fresh EKS validation that did not happen.
 
 // Tracks new releases. Set via PUBLIC_KUBEPREFLIGHT_VERSION (see
 // .env.example) so a future release only needs an env var change +
 // redeploy — never a source edit. Falls back to the last release wired in
 // here if the env var isn't set, so local dev and CI never break silently.
-const latestReleaseVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v0.14.0';
+const latestReleaseVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v0.15.0-redaction';
 
 // Fixed historical facts, deliberately NOT env-driven — see comment above.
 const verifiedEKSReleaseVersion = 'v0.14.0';
 const caseStudyVersion = 'v0.14.0';
+const latestDockerTag = latestReleaseVersion.replace(/^v/, '');
+const latestGitHubActionRef = latestReleaseVersion;
 
 export const site = {
   name: 'KubePreflight',
@@ -48,9 +48,14 @@ export const site = {
   latestReleaseVersion,
   // Same release, without the leading "v" — the shape ghcr.io Docker tags use.
   // Derived, not a second env var, so the two can never drift out of sync.
-  latestDockerTag: latestReleaseVersion.replace(/^v/, ''),
+  latestDockerTag,
+  latestGitHubActionRef,
   verifiedEKSReleaseVersion,
   caseStudyVersion,
+  releaseFeatures: {
+    supportsVersionCommand: false,
+    supportsRedaction: true
+  },
   repositoryOwner: 'imneeteeshyadav98',
   repositoryName: 'kubepreflight',
   ogImage: '/og/default.svg',

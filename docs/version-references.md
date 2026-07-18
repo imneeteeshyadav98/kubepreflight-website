@@ -1,8 +1,9 @@
 # Version references
 
 `src/content/site.ts` exposes three separate version constants. They are not
-interchangeable, even though they currently resolve to the same value
-(`v0.14.0`).
+interchangeable. The latest public release is currently
+`v0.15.0-redaction`, while the real-EKS validation and published case-study
+evidence remain pinned to `v0.14.0`.
 
 | Constant | What it means | Where it's used | How it changes |
 |---|---|---|---|
@@ -35,3 +36,11 @@ impossible to introduce by accident.
   real-EKS validation against the new release.
 - Never update `caseStudyVersion` — it is a historical fact about a specific
   evidence capture, not a pointer to "the current release."
+
+## Current release feature flags
+
+`site.releaseFeatures.supportsRedaction` is `true` for
+`v0.15.0-redaction`, the first public release with native sensitive
+identifier redaction. `site.releaseFeatures.supportsVersionCommand` is
+currently `false`: version/provenance commands exist on the development
+branch, but are not available in the `v0.15.0-redaction` binary.
