@@ -13,6 +13,7 @@ const paths = [
   '/docs',
   '/eks-upgrade-readiness',
   '/kubernetes-upgrade-checklist',
+  '/kubernetes-deprecated-api-checker',
   '/install',
   '/use-cases',
   '/github-action',

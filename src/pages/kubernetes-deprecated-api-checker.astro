@@ -1,0 +1,349 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/layout/Container.astro';
+import Section from '../components/layout/Section.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import IconLink from '../components/ui/IconLink.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import { site } from '../content/site';
+
+const scanCommand = `kubepreflight scan \\
+  --manifests-only \\
+  --manifests ./k8s \\
+  --helm-chart ./charts/my-app \\
+  --target-version 1.32 \\
+  --output all`;
+
+const whereItHides = [
+  {
+    title: 'Live cluster objects',
+    body: 'Objects already applied to the cluster can still carry an old apiVersion if nothing has re-applied them since it was deprecated.'
+  },
+  {
+    title: 'Raw manifests',
+    body: 'YAML sitting in a repo is never validated by the cluster until it is applied -- by then the upgrade window has already started.'
+  },
+  {
+    title: 'Helm chart templates',
+    body: 'A chart version bump does not help if the template source itself still renders a removed apiVersion. Check the template, not just the installed release.'
+  },
+  {
+    title: 'Controllers and operators',
+    body: 'Some controllers create or reconcile objects using an API version pinned in their own code, independent of what you deploy.'
+  },
+  {
+    title: 'CRDs and conversion webhooks',
+    body: 'A CustomResourceDefinition without a working conversion webhook can strand existing custom resources when their served version changes.'
+  },
+  {
+    title: 'CI and pull requests',
+    body: 'Catching a removed apiVersion in a pull request is cheaper than catching it during the maintenance window.'
+  }
+];
+
+const apiCatalog = [
+  ['extensions/v1beta1 Deployment', 'apps/v1', '1.8', '1.16'],
+  ['extensions/v1beta1 Ingress', 'networking.k8s.io/v1', '1.14', '1.22'],
+  ['networking.k8s.io/v1beta1 Ingress', 'networking.k8s.io/v1', '1.19', '1.22'],
+  ['apiextensions.k8s.io/v1beta1 CustomResourceDefinition', 'apiextensions.k8s.io/v1', '1.16', '1.22'],
+  ['admissionregistration.k8s.io/v1beta1 (Validating/Mutating)WebhookConfiguration', 'admissionregistration.k8s.io/v1', '1.16', '1.22'],
+  ['rbac.authorization.k8s.io/v1beta1 (Cluster)Role(Binding)', 'rbac.authorization.k8s.io/v1', '1.17', '1.22'],
+  ['policy/v1beta1 PodSecurityPolicy', 'Pod Security Admission or a policy engine', '1.21', '1.25'],
+  ['policy/v1beta1 PodDisruptionBudget', 'policy/v1', '1.21', '1.25'],
+  ['batch/v1beta1 CronJob', 'batch/v1', '1.21', '1.25'],
+  ['autoscaling/v2beta1 HorizontalPodAutoscaler', 'autoscaling/v2', '1.22', '1.25'],
+  ['autoscaling/v2beta2 HorizontalPodAutoscaler', 'autoscaling/v2', '1.23', '1.26'],
+  ['flowcontrol.apiserver.k8s.io/v1beta3 FlowSchema / PriorityLevelConfiguration', 'flowcontrol.apiserver.k8s.io/v1', '1.29', '1.32']
+];
+
+const summaryFields = [
+  ['status', '"Passed" or "Failed" for the API compatibility category as a whole.'],
+  ['removedObjects / deprecatedObjects', 'How many affected objects were found, split by removed vs. still-deprecated.'],
+  ['removedFamilies / deprecatedFamilies', 'Grouped by apiVersion and kind, each with the affected resource names.'],
+  ['criticalImpact', 'Whether a removed API was found -- removed APIs fail the manifest outright once the cluster reaches the target version.'],
+  ['scoreImpact', 'How much this category subtracted from the overall readiness score.']
+];
+
+const faqs = [
+  {
+    question: 'How do I check for deprecated Kubernetes APIs before I upgrade?',
+    answer:
+      'Check live cluster objects, raw manifests, and Helm chart templates against the target Kubernetes version -- not just the currently installed cluster version. A manifests-only scan works before you touch a live cluster.'
+  },
+  {
+    question: 'Does kubectl warn about deprecated APIs automatically?',
+    answer:
+      'kubectl and the API server can return deprecation warnings for requests made against a deprecated version, but that only covers what is actively being applied -- not manifests sitting in a repo, unrendered Helm templates, or objects a controller might create later.'
+  },
+  {
+    question: 'What is the difference between a deprecated and a removed API?',
+    answer:
+      'A deprecated API still works but is scheduled for removal in a later minor version. A removed API no longer exists on the API server -- applying or reconciling an object against it fails outright.'
+  },
+  {
+    question: 'Does a Helm chart version bump fix a deprecated API automatically?',
+    answer:
+      'Only if the chart maintainer updated the template source to the replacement apiVersion. Check the rendered template for the version you actually deploy, not just the chart version number.'
+  },
+  {
+    question: 'Can a removed API break an upgrade even if the cluster looks healthy today?',
+    answer:
+      'Yes. A resource using a removed apiVersion is invisible until something tries to create, update, or re-apply it against the new control-plane version -- at which point the request fails.'
+  },
+  {
+    question: 'Does KubePreflight fix deprecated APIs automatically?',
+    answer:
+      'No. KubePreflight identifies affected objects and suggests a replacement apiVersion. It does not edit manifests, apply changes, or perform the migration for you.'
+  }
+];
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: 'Kubernetes Deprecated API Checker',
+    description:
+      'Check Kubernetes manifests, Helm chart templates, and live cluster objects for deprecated and removed APIs before you upgrade, with a reference table of commonly removed APIs.',
+    url: `${site.url}/kubernetes-deprecated-api-checker`,
+    publisher: {
+      '@type': 'Organization',
+      name: site.name,
+      url: site.url
+    }
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer
+      }
+    }))
+  }
+];
+---
+
+<BaseLayout
+  title="Kubernetes Deprecated API Checker"
+  description="Check Kubernetes manifests, Helm chart templates, and live cluster objects for deprecated and removed APIs before you upgrade, with a reference table of commonly removed APIs."
+  structuredData={structuredData}
+>
+  <Section tone="ink" spacing="md">
+    <Container>
+      <a href="/" class="text-sm text-text-muted transition-colors duration-150 hover:text-text-primary">
+        Back to home
+      </a>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <Badge tone="blue">Kubernetes</Badge>
+        <Badge tone="neutral">API compatibility</Badge>
+      </div>
+
+      <h1 class="mt-5 max-w-3xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
+        Kubernetes Deprecated API Checker
+      </h1>
+
+      <p class="mt-6 max-w-3xl text-lg leading-relaxed text-text-muted">
+        Find deprecated and removed Kubernetes APIs across manifests, Helm chart templates, and
+        live cluster objects before an upgrade turns a silent apiVersion into a failed apply.
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <Button href="/docs/">Run your first scan</Button>
+        <Button href="/kubernetes-upgrade-checklist/" variant="secondary">See the full upgrade checklist</Button>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Where it hides</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Release notes tell you what changed. They don't tell you what's yours.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          The Kubernetes deprecation guide lists what was removed in each release. It cannot tell
+          you whether your own manifests, chart templates, or controllers still reference one of
+          them -- that check has to run against your actual source and cluster state.
+        </p>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+        {
+          whereItHides.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5">
+              <h3 class="font-mono text-sm text-text-primary">{item.title}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Reference</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Commonly removed and deprecated Kubernetes APIs.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          A short, non-exhaustive reference. Always check the target version you are actually
+          upgrading to -- an API can be deprecated for several releases before it is removed.
+        </p>
+      </div>
+
+      <div class="mt-10 overflow-hidden rounded-[var(--radius-md)] border border-border">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[720px] border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-b border-border bg-ink-900">
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">API and kind</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Replacement</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Deprecated in</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Removed in</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                apiCatalog.map((row, index) => (
+                  <tr class={index < apiCatalog.length - 1 ? 'border-b border-border' : ''}>
+                    <td class="px-5 py-4 align-top font-mono text-xs text-text-primary">{row[0]}</td>
+                    <td class="px-5 py-4 align-top font-mono text-xs text-text-muted">{row[1]}</td>
+                    <td class="px-5 py-4 align-top text-text-muted">{row[2]}</td>
+                    <td class="px-5 py-4 align-top text-text-muted">{row[3]}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="mt-4 text-sm leading-relaxed text-text-muted">
+        Source: the Kubernetes Deprecated API Migration Guide.{' '}
+        <a href="https://kubernetes.io/docs/reference/using-api/deprecation-guide/" target="_blank" rel="noreferrer noopener" class="underline decoration-border underline-offset-2 hover:text-text-primary">
+          Read the full guide
+        </a>.
+      </p>
+    </Container>
+  </Section>
+
+  <Section tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">KubePreflight example</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+            Check manifests and Helm charts before a live cluster exists.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            <span class="font-mono text-text-dark">--manifests-only</span> skips kubeconfig and
+            cloud-provider collection entirely -- useful in CI, or before a cluster for the target
+            version even exists. Add <span class="font-mono text-text-dark">--helm-chart</span> to
+            render and scan a chart's templates the same way.
+          </p>
+          <p class="mt-4 text-sm leading-relaxed text-text-muted-dark">
+            The report's API Compatibility summary groups affected objects by apiVersion and kind,
+            separate from the rest of the findings.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-x-6 gap-y-3">
+            <a href="/docs/#quick-start" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">
+              Quick start docs
+            </a>
+            <a href="/github-action/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">
+              Run it in CI
+            </a>
+          </div>
+        </div>
+        <div class="lg:col-span-7">
+          <CodeBlock
+            title="Manifests and Helm chart API check"
+            code={scanCommand}
+            copyable
+            kind="command"
+            copyLabel="Copy scan command"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-4">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Reading the result</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            The API Compatibility summary, field by field.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            This summary sits alongside the individual findings -- it groups the same evidence by
+            apiVersion and kind so you can see the blast radius at a glance.
+          </p>
+        </div>
+        <div class="lg:col-span-8">
+          <div class="overflow-hidden rounded-[var(--radius-md)] border border-border">
+            <table class="w-full border-collapse text-left text-sm">
+              <tbody>
+                {
+                  summaryFields.map((row, index) => (
+                    <tr class={index < summaryFields.length - 1 ? 'border-b border-border' : ''}>
+                      <td class="w-64 px-4 py-4 align-top font-mono text-xs text-text-primary">{row[0]}</td>
+                      <td class="px-4 py-4 align-top text-text-muted">{row[1]}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">FAQ</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Common deprecated-API questions.
+        </h2>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {
+          faqs.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-6">
+              <h3 class="font-mono text-sm text-text-primary">{item.question}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.answer}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink" border={false}>
+    <Container>
+      <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-xl">
+          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Check your own manifests.</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Run a manifests-only scan against your target Kubernetes version, then review the API
+            Compatibility summary before you touch a live cluster.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <Button href="/docs/">Run your first scan</Button>
+          <IconLink href="/kubernetes-upgrade-checklist/">See the full upgrade checklist</IconLink>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>

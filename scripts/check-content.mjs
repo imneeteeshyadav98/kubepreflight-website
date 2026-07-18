@@ -26,6 +26,7 @@ const sourceFiles = [
   'src/pages/docs.astro',
   'src/pages/eks-upgrade-readiness.astro',
   'src/pages/kubernetes-upgrade-checklist.astro',
+  'src/pages/kubernetes-deprecated-api-checker.astro',
   'src/pages/install.astro',
   'src/pages/use-cases.astro',
   'src/pages/github-action.astro',
@@ -121,6 +122,29 @@ check(
 check(
   'kubernetes-upgrade-checklist.astro: uses Cloudflare-safe CodeBlock for command example',
   upgradeChecklist.includes('<CodeBlock') && upgradeChecklist.includes('copyLabel="Copy scan command"')
+);
+
+// --- SEO-001C: Kubernetes deprecated API checker ---
+const apiChecker = read('src/pages/kubernetes-deprecated-api-checker.astro');
+for (const phrase of [
+  'Kubernetes Deprecated API Checker',
+  'Live cluster objects',
+  'Raw manifests',
+  'Helm chart templates',
+  'Controllers and operators',
+  'CRDs and conversion webhooks',
+  'Commonly removed and deprecated Kubernetes APIs',
+  'It does not edit manifests, apply changes, or perform the migration for you'
+]) {
+  check(`kubernetes-deprecated-api-checker.astro: required phrase present: ${phrase}`, apiChecker.includes(phrase));
+}
+check(
+  'kubernetes-deprecated-api-checker.astro: current release does not claim version command support',
+  !/kubepreflight\s+(--version|version)/.test(apiChecker)
+);
+check(
+  'kubernetes-deprecated-api-checker.astro: uses Cloudflare-safe CodeBlock for command example',
+  apiChecker.includes('<CodeBlock') && apiChecker.includes('copyLabel="Copy scan command"')
 );
 
 // --- Fix #1 / #2: comparison PASS vs upgrade-readiness, strict vs comparison gate ---
