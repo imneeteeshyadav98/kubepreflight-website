@@ -10,6 +10,7 @@ const userDataDir = mkdtempSync(join(tmpdir(), 'kubepreflight-chrome-'));
 
 const paths = [
   '/',
+  '/docs',
   '/install',
   '/use-cases',
   '/github-action',
@@ -171,6 +172,7 @@ async function main() {
         returnByValue: true,
         expression: `(() => ({
           title: document.title,
+          h1Count: document.querySelectorAll('h1').length,
           clientWidth: document.documentElement.clientWidth,
           scrollWidth: document.documentElement.scrollWidth,
           bodyScrollWidth: document.body.scrollWidth,
@@ -221,6 +223,9 @@ async function main() {
       }, sessionId);
 
       const value = result.result.value;
+      if (value.h1Count !== 1) {
+        failures.push(`${viewport.label} ${path}: expected exactly one h1, found ${value.h1Count}`);
+      }
       if (value.emailProtectionMarkup > 0) {
         failures.push(`${viewport.label} ${path}: Cloudflare email-protection markup found`);
       }
