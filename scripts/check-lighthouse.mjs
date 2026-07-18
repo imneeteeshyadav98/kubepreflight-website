@@ -1,8 +1,10 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import * as chromeLauncher from 'chrome-launcher';
 import lighthouse from 'lighthouse';
+import { evaluateSeo } from './lighthouse-seo-exception.mjs';
 
 const baseUrl = process.env.LIGHTHOUSE_BASE_URL || process.env.SMOKE_BASE_URL || 'http://127.0.0.1:4322';
+const hostname = new URL(baseUrl).hostname;
 const chromePath = process.env.CHROME_BIN || undefined;
 
 const paths = ['/', '/install', '/use-cases', '/github-action', '/case-study/eks-1-31-to-1-32', '/security'];
@@ -46,9 +48,31 @@ try {
     summary.push({ path, scores });
 
     for (const [key, min] of Object.entries(thresholds)) {
+      if (key === 'seo') continue; // evaluated separately below via evaluateSeo()
       if (scores[key] < min) {
         failures.push(`${path}: ${key} ${scores[key]} < ${min}`);
       }
+    }
+
+    const seoCategory = result.lhr.categories.seo;
+    const failingSeoAudits = seoCategory.auditRefs
+      .map((ref) => result.lhr.audits[ref.id])
+      .filter((audit) => audit && audit.score !== null && audit.score < 1)
+      .map((audit) => audit.id);
+
+    const seoResult = evaluateSeo({
+      hostname,
+      score: scores.seo,
+      threshold: thresholds.seo,
+      failingAudits: failingSeoAudits,
+      robotsTxtDetails: result.lhr.audits['robots-txt']?.details
+    });
+
+    if (seoResult.warning) {
+      console.log(`\n${path}\n${seoResult.warning}`);
+    }
+    if (!seoResult.passed) {
+      failures.push(`${path}: seo ${scores.seo} < ${thresholds.seo}`);
     }
   }
 } finally {
