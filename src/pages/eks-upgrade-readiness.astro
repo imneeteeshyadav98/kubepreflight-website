@@ -1,0 +1,447 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/layout/Container.astro';
+import Section from '../components/layout/Section.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import IconLink from '../components/ui/IconLink.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import { site } from '../content/site';
+
+const eksScan = `kubepreflight scan \\
+  --provider eks \\
+  --cluster-name my-cluster \\
+  --target-version 1.32 \\
+  --redact-sensitive-identifiers \\
+  --output all`;
+
+const riskCategories = [
+  {
+    title: 'Removed and deprecated Kubernetes APIs',
+    body:
+      'Objects, controllers, or rendered manifests can still reference API versions removed in the target Kubernetes minor release.'
+  },
+  {
+    title: 'Admission webhook incompatibility',
+    body:
+      'Unavailable webhook backends, broad match rules, or deprecated admissionregistration APIs can block writes during an upgrade window.'
+  },
+  {
+    title: 'PDB and eviction constraints',
+    body:
+      'PodDisruptionBudgets can preserve availability, but overly strict budgets can also prevent node drain from making progress.'
+  },
+  {
+    title: 'Workload health',
+    body:
+      'Unready pods, crash loops, singleton replicas, and scheduling constraints reduce the margin available during control-plane or node changes.'
+  },
+  {
+    title: 'Node and kubelet version skew',
+    body:
+      'Managed node groups and self-managed nodes need a supported kubelet skew and enough healthy capacity for safe replacement.'
+  },
+  {
+    title: 'Managed add-on compatibility',
+    body:
+      'CoreDNS, kube-proxy, VPC CNI, CSI drivers, and other controllers can be version-sensitive during EKS upgrades.'
+  },
+  {
+    title: 'Insufficient drain capacity',
+    body:
+      'Even when the control plane upgrade succeeds, pods may remain pending if capacity, topology, or disruption assumptions were wrong.'
+  },
+  {
+    title: 'EKS-native upgrade insights',
+    body:
+      'EKS upgrade insights provide provider-side evidence that should be read alongside Kubernetes API and workload evidence.'
+  },
+  {
+    title: 'Incomplete or stale evidence',
+    body:
+      'Missing Kubernetes, AWS, or manifest evidence should be treated as a coverage gap, not as proof that a risk is absent.'
+  },
+  {
+    title: 'Recovery and rollback readiness',
+    body:
+      'Rollback eligibility, rollback-window evidence, and operational readiness are related to upgrade readiness, but they answer different questions.'
+  }
+];
+
+const checklist = [
+  ['APIs', 'Removed/deprecated API usage', 'Manifests or controllers fail'],
+  ['Webhooks', 'API versions, availability, rules', 'Requests may be blocked'],
+  ['PDBs', 'Allowed disruptions and replicas', 'Node drain may stall'],
+  ['Nodes', 'Kubelet skew and health', 'Unsupported upgrade state'],
+  ['Add-ons', 'CoreDNS, CSI, controllers', 'Cluster services may degrade'],
+  ['Capacity', 'Rescheduling headroom', 'Workloads remain pending'],
+  ['Rollback', 'Window, eligibility, health', 'Recovery option may be unavailable']
+];
+
+const workflow = [
+  'Select the intended target Kubernetes version.',
+  'Collect Kubernetes and EKS evidence.',
+  'Review blockers before warnings.',
+  'Resolve unsupported APIs and unsafe webhooks.',
+  'Test drain and scheduling assumptions.',
+  'Validate add-on and node compatibility.',
+  'Generate an upgrade plan.',
+  'Re-scan close to the maintenance window.',
+  'Preserve evidence for the change record.',
+  'Review rollback readiness after the upgrade.'
+];
+
+const resultTerms = [
+  ['Blocker', 'A finding that should stop the upgrade plan until fixed or explicitly accepted.'],
+  ['Warning', 'A risk or advisory that should stay visible in the change review.'],
+  ['Info', 'Context or inventory that does not gate the exit code by itself.'],
+  ['Readiness score', 'A summary signal for comparing scan posture over time, not a guarantee.'],
+  ['Evidence coverage', 'Whether requested Kubernetes, AWS, or manifest evidence was complete, partial, or skipped.'],
+  ['API Compatibility summary', 'A grouped view of removed and deprecated API families and affected resources.'],
+  ['Remediation', 'Suggested operator action. KubePreflight does not apply changes automatically.'],
+  ['canUpgradeContinue', 'A per-finding field that marks whether that finding blocks continuing the upgrade.']
+];
+
+const faqs = [
+  {
+    question: 'What should I check before upgrading an EKS cluster?',
+    answer:
+      'Check removed and deprecated APIs, admission webhooks, PDB and eviction constraints, workload health, node and kubelet skew, managed add-on compatibility, drain capacity, EKS upgrade insights, evidence coverage, and rollback readiness.'
+  },
+  {
+    question: 'Does EKS automatically detect deprecated APIs?',
+    answer:
+      'EKS provides upgrade insights, but a practical readiness review should also inspect live Kubernetes objects, manifests, webhooks, workloads, PDBs, nodes, add-ons, and coverage gaps.'
+  },
+  {
+    question: 'Can a PodDisruptionBudget block an EKS node upgrade?',
+    answer:
+      'Yes. A PDB that allows too few disruptions, combined with replica count or scheduling limits, can keep node drain from evicting pods safely.'
+  },
+  {
+    question: 'How do admission webhooks affect Kubernetes upgrades?',
+    answer:
+      'Admission webhooks can block creates, updates, or deletes when their backend is unavailable, their rules are too broad, or their API versions are incompatible with the target Kubernetes version.'
+  },
+  {
+    question: 'Should I upgrade EKS add-ons before or after the control plane?',
+    answer:
+      'Treat add-on order as a reviewed change-plan decision. Check target-version compatibility for CoreDNS, kube-proxy, VPC CNI, CSI drivers, and other controllers before the window.'
+  },
+  {
+    question: 'Can KubePreflight perform the upgrade?',
+    answer:
+      'No. KubePreflight assesses and explains upgrade readiness. It does not perform EKS upgrades, rollbacks, remediations, or cluster mutations.'
+  },
+  {
+    question: 'Does report redaction remove every possible secret?',
+    answer:
+      'No. Redaction reduces accidental exposure of supported infrastructure identifiers. You should still review generated artifacts before sharing because application names, namespaces, labels, annotations, and business data may remain visible.'
+  }
+];
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: 'Amazon EKS Upgrade Readiness Guide',
+    description:
+      'Learn how to assess APIs, webhooks, workloads, PDBs, nodes, add-ons, drain capacity, cluster health, and rollback readiness before an Amazon EKS upgrade.',
+    url: `${site.url}/eks-upgrade-readiness`,
+    publisher: {
+      '@type': 'Organization',
+      name: site.name,
+      url: site.url
+    }
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer
+      }
+    }))
+  }
+];
+---
+
+<BaseLayout
+  title="Amazon EKS Upgrade Readiness Guide"
+  description="Learn how to assess APIs, webhooks, workloads, PDBs, nodes, add-ons, drain capacity, cluster health, and rollback readiness before an Amazon EKS upgrade."
+  structuredData={structuredData}
+>
+  <Section tone="ink" spacing="md">
+    <Container>
+      <a href="/" class="text-sm text-text-muted transition-colors duration-150 hover:text-text-primary">
+        Back to home
+      </a>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <Badge tone="blue">Amazon EKS</Badge>
+        <Badge tone="neutral">Upgrade readiness</Badge>
+      </div>
+
+      <h1 class="mt-5 max-w-3xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
+        Amazon EKS Upgrade Readiness Guide
+      </h1>
+
+      <p class="mt-6 max-w-3xl text-lg leading-relaxed text-text-muted">
+        Assess Kubernetes APIs, admission webhooks, workloads, PodDisruptionBudgets, nodes,
+        add-ons, drain capacity, cluster health, and rollback evidence before opening an EKS
+        upgrade window.
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <Button href="/docs/">Run your first EKS assessment</Button>
+        <Button href="/case-study/eks-1-31-to-1-32/" variant="secondary">View the real EKS case study</Button>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Why upgrades fail</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          EKS upgrade risk is rarely one big thing.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          A control-plane version change can expose many smaller assumptions at once: APIs that
+          disappeared, webhooks that intercept critical requests, workloads that cannot move, and
+          provider evidence that was never collected.
+        </p>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+        {
+          riskCategories.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5">
+              <h3 class="font-mono text-sm text-text-primary">{item.title}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Readiness checklist</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Check the failure modes before the window.
+        </h2>
+      </div>
+
+      <div class="mt-10 overflow-hidden rounded-[var(--radius-md)] border border-border">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[680px] border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-b border-border bg-ink-900">
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Area</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">What to verify</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted">Failure impact</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                checklist.map((row, index) => (
+                  <tr class={index < checklist.length - 1 ? 'border-b border-border' : ''}>
+                    <td class="px-5 py-4 align-top font-mono text-xs text-text-primary">{row[0]}</td>
+                    <td class="px-5 py-4 align-top text-text-muted">{row[1]}</td>
+                    <td class="px-5 py-4 align-top text-text-muted">{row[2]}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">Assessment workflow</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+            Build a repeatable upgrade review.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            A useful readiness review turns evidence into decisions: what blocks the window, what
+            remains advisory, what must be checked again, and what needs to be preserved for the
+            change record.
+          </p>
+        </div>
+        <ol class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-7">
+          {
+            workflow.map((item, index) => (
+              <li class="rounded-[var(--radius-md)] border border-border-dark p-4 text-sm leading-relaxed text-text-muted-dark">
+                <span class="mr-2 font-mono text-xs text-text-dark">{String(index + 1).padStart(2, '0')}</span>
+                {item}
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">KubePreflight example</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Collect EKS evidence and produce reviewable artifacts.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            This command uses the current kubeconfig plus read-only AWS/EKS access available to the
+            process. It requests all report formats and redacts supported sensitive infrastructure
+            identifiers before the artifacts are shared.
+          </p>
+          <p class="mt-4 text-sm leading-relaxed text-text-muted">
+            The scan writes <span class="font-mono text-text-primary">findings.json</span> and, with{' '}
+            <span class="font-mono text-text-primary">--output all</span>, Markdown and HTML reports.
+            Review the evidence and coverage before using the result in an upgrade decision.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-x-6 gap-y-3">
+            <IconLink href="/docs/#first-eks-scan">First EKS scan docs</IconLink>
+            <IconLink href="/security/">Security and redaction</IconLink>
+          </div>
+        </div>
+        <div class="lg:col-span-7">
+          <CodeBlock
+            title="EKS readiness scan"
+            code={eksScan}
+            copyable
+            kind="command"
+            copyLabel="Copy EKS readiness scan"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-4">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Interpret results</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Do not stop at the top-line score.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            A clean assessment reduces known upgrade risk, but it is not a guarantee that an
+            upgrade cannot fail. Review evidence coverage and repeat the scan near the maintenance
+            window.
+          </p>
+        </div>
+        <div class="lg:col-span-8">
+          <div class="overflow-hidden rounded-[var(--radius-md)] border border-border">
+            <table class="w-full border-collapse text-left text-sm">
+              <tbody>
+                {
+                  resultTerms.map((row, index) => (
+                    <tr class={index < resultTerms.length - 1 ? 'border-b border-border' : ''}>
+                      <td class="w-48 px-4 py-4 align-top font-mono text-xs text-text-primary">{row[0]}</td>
+                      <td class="px-4 py-4 align-top text-text-muted">{row[1]}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-7">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">Upgrade versus rollback</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+            Rollback readiness is related, but separate.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            Pre-upgrade readiness asks whether the planned upgrade should proceed. Post-upgrade
+            rollback readiness asks whether recovery evidence supports rollback, fix-forward, or
+            operator decision. Technical rollback eligibility does not automatically mean rollback
+            is the safest recommendation.
+          </p>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            KubePreflight assesses and explains; it does not perform upgrades, rollbacks,
+            remediation, or cluster mutation.
+          </p>
+        </div>
+        <div class="lg:col-span-5">
+          <div class="rounded-[var(--radius-md)] border border-border-dark p-6">
+            <h3 class="font-mono text-sm text-text-dark">Useful next reads</h3>
+            <div class="mt-5 grid grid-cols-1 gap-3">
+              <a href="/case-study/eks-1-31-to-1-32/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">
+                Real EKS 1.31 to 1.32 case study
+              </a>
+              <a href="/use-cases/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">
+                Upgrade planning use cases
+              </a>
+              <a href="/github-action/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">
+                CI regression gating
+              </a>
+              <a href="/install/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">
+                Install KubePreflight
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">FAQ</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Common EKS upgrade readiness questions.
+        </h2>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {
+          faqs.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-6">
+              <h3 class="font-mono text-sm text-text-primary">{item.question}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.answer}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink" border={false}>
+    <Container>
+      <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-xl">
+          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Ready to assess your own cluster?</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Start with the first-user docs journey, then attach the generated reports to the
+            upgrade change record.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <Button href="/docs/">Run your first EKS assessment</Button>
+          <IconLink href="/case-study/eks-1-31-to-1-32/">View real EKS evidence</IconLink>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
