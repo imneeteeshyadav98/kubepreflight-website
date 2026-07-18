@@ -2,6 +2,21 @@
 import Container from '../layout/Container.astro';
 import Section from '../layout/Section.astro';
 import Button from '../ui/Button.astro';
+import IconLink from '../ui/IconLink.astro';
+import { site } from '../../content/site';
+
+const cards = [
+  {
+    title: 'Remediation and comparison',
+    description: 'Real blockers fixed, a second scan, and kubepreflight compare showing the readiness-score movement and a passing gate.',
+    href: `${site.githubUrl}#scan-comparison`
+  },
+  {
+    title: 'Console and report',
+    description: 'The embedded Console loaded with real disposable-cluster evidence — summary, findings, and next actions.',
+    href: `${site.githubUrl}#kubepreflight-console-local-viewer`
+  }
+];
 ---
 
 <Section tone="ink-raised">
@@ -9,19 +24,19 @@ import Button from '../ui/Button.astro';
     <div class="mx-auto max-w-3xl text-center">
       <span class="font-mono text-xs uppercase tracking-wide text-text-muted">See it in action</span>
       <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
-        From evidence to a reviewable decision.
+        See KubePreflight run against a disposable EKS cluster.
       </h2>
       <p class="mt-4 leading-relaxed text-text-muted">
-        This walkthrough replays the public, sanitized EKS 1.31 → 1.32 case-study artifacts. It
-        shows the real comparison output, embedded Console, readiness movement, remaining
-        blockers, and next actions.
+        Follow a real read-only scan from cluster evidence to terminal verdict, remediation,
+        comparison, and the embedded Console. The cluster was created, scanned, and destroyed in
+        one session — see <a href={`${site.githubUrl}/tree/master/demo/live-eks`} class="underline decoration-border underline-offset-2 hover:text-text-primary" target="_blank" rel="noreferrer noopener">demo/live-eks</a> to reproduce it yourself.
       </p>
     </div>
 
     <div class="mt-10 overflow-hidden rounded-[var(--radius-md)] border border-border">
       <img
-        src="/media/kubepreflight-case-study-workflow.gif"
-        alt="Terminal replaying sanitized real-EKS case-study evidence with kubepreflight compare, followed by the same evidence in the embedded KubePreflight Console showing readiness movement, blockers, and next actions."
+        src="/media/kubepreflight-live-eks-scan.gif"
+        alt="Terminal running kubectl get nodes against a real, disposable EKS cluster, then kubepreflight scan, printing a live BLOCKED verdict with real blockers and warnings."
         loading="lazy"
         decoding="async"
         width="1100"
@@ -30,8 +45,22 @@ import Button from '../ui/Button.astro';
       />
     </div>
 
+    <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {
+        cards.map((card) => (
+          <div class="rounded-[var(--radius-md)] border border-border p-6">
+            <h3 class="font-editorial text-lg text-text-primary">{card.title}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-text-muted">{card.description}</p>
+            <IconLink href={card.href} external class="mt-4">
+              Watch on GitHub
+            </IconLink>
+          </div>
+        ))
+      }
+    </div>
+
     <div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
-      <Button href="/case-study/eks-1-31-to-1-32" variant="secondary">View the full EKS case study</Button>
+      <Button href="/case-study/eks-1-31-to-1-32" variant="secondary">Read the sanitized case study</Button>
       <Button href="/install">Install KubePreflight</Button>
     </div>
   </Container>
