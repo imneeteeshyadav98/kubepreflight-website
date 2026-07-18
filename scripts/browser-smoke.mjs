@@ -174,6 +174,34 @@ async function main() {
           clientWidth: document.documentElement.clientWidth,
           scrollWidth: document.documentElement.scrollWidth,
           bodyScrollWidth: document.body.scrollWidth,
+          emailProtectionMarkup: document.querySelectorAll('a[href*="/cdn-cgi/l/email-protection"], .__cf_email__').length,
+          copyMismatches: Array.from(document.querySelectorAll('.copy-button'))
+            .map((button) => {
+              const code = button.closest('.overflow-hidden')?.querySelector('code');
+              const encoded = button.dataset.copyTextB64 || '';
+              let actual = '';
+              try {
+                actual = new TextDecoder().decode(
+                  Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0))
+                );
+              } catch {
+                actual = '__decode_failed__';
+              }
+              const expected = (code?.textContent || '')
+                .replace(/^\\n/, '')
+                .replace(/\\n$/, '')
+                .split('\\n')
+                .map((line) => line.startsWith('$ ') ? line.slice(2) : line)
+                .join('\\n');
+              return {
+                label: button.getAttribute('aria-label') || '',
+                actual,
+                expected,
+                ok: actual === expected
+              };
+            })
+            .filter((item) => !item.ok)
+            .slice(0, 5),
           offenders: Array.from(document.querySelectorAll('*'))
             .map((element) => {
               const rect = element.getBoundingClientRect();
@@ -193,6 +221,15 @@ async function main() {
       }, sessionId);
 
       const value = result.result.value;
+      if (value.emailProtectionMarkup > 0) {
+        failures.push(`${viewport.label} ${path}: Cloudflare email-protection markup found`);
+      }
+      if (value.copyMismatches.length > 0) {
+        const mismatches = value.copyMismatches
+          .map((item) => `${item.label || 'copy button'} copied ${JSON.stringify(item.actual).slice(0, 120)} expected ${JSON.stringify(item.expected).slice(0, 120)}`)
+          .join('; ');
+        failures.push(`${viewport.label} ${path}: copy payload mismatch; ${mismatches}`);
+      }
       const overflow = Math.max(value.scrollWidth, value.bodyScrollWidth) - value.clientWidth;
       if (overflow > 1) {
         const offenders = value.offenders

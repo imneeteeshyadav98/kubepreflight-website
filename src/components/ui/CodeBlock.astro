@@ -14,9 +14,13 @@ interface Props {
 const { title, code, class: className = '', copyable = false, copyLabel, kind } = Astro.props;
 
 const lines = code.replace(/^\n/, '').replace(/\n$/, '').split('\n');
+const encodedCopyText = Buffer.from(
+  lines.map((line) => (line.startsWith('$ ') ? line.slice(2) : line)).join('\n'),
+  'utf8'
+).toString('base64');
 
 function escapeHtml(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/@/g, '&#64;');
 }
 
 const highlighted = lines
@@ -27,10 +31,6 @@ const highlighted = lines
     return `<span class="${cls}">${escapeHtml(line)}</span>`;
   })
   .join('\n');
-
-// What actually lands on the clipboard: strip the "$ " prompt marker so a
-// paste runs directly in a shell instead of erroring on a literal "$ ".
-const copyText = lines.map((line) => (line.startsWith('$ ') ? line.slice(2) : line)).join('\n');
 
 const defaultCopyLabel = copyLabel ?? `Copy ${title ?? 'command'}`;
 
@@ -61,7 +61,7 @@ const kindLabel: Record<NonNullable<Props['kind']>, string> = {
                 type="button"
                 class="copy-button flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-[var(--radius-sm)] border border-border px-2.5 text-xs text-text-muted transition-colors duration-150 hover:border-signal hover:text-signal"
                 aria-label={defaultCopyLabel}
-                data-copy-text={copyText}
+                data-copy-text-b64={encodedCopyText}
                 data-default-label="Copy"
               >
                 <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -89,7 +89,10 @@ const kindLabel: Record<NonNullable<Props['kind']>, string> = {
     const button = (event.target as HTMLElement)?.closest<HTMLButtonElement>('.copy-button');
     if (!button) return;
 
-    const text = button.dataset.copyText ?? '';
+    const encodedText = button.dataset.copyTextB64 ?? '';
+    const text = new TextDecoder().decode(
+      Uint8Array.from(atob(encodedText), (char) => char.charCodeAt(0))
+    );
     const defaultLabel = button.dataset.defaultLabel ?? 'Copy';
     const labelEl = button.querySelector<HTMLElement>('.copy-button-label');
     const statusEl = button.parentElement?.querySelector<HTMLElement>('[data-copy-status]');
