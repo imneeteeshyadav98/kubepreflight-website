@@ -8,12 +8,14 @@ import IconLink from '../components/ui/IconLink.astro';
 import CodeBlock from '../components/ui/CodeBlock.astro';
 import { site } from '../content/site';
 
-const VERSION = site.currentVersion;
+const VERSION = site.latestReleaseVersion;
 
 const linuxInstall = `VERSION=${VERSION}
 
-curl -LO "https://github.com/imneeteeshyadav98/kubepreflight/releases/download/\${VERSION}/kubepreflight_\${VERSION}_linux_amd64.tar.gz"
-curl -LO "https://github.com/imneeteeshyadav98/kubepreflight/releases/download/\${VERSION}/kubepreflight_\${VERSION}_checksums.txt"
+curl -LO \\
+  "https://github.com/${site.repositoryOwner}/${site.repositoryName}/releases/download/\${VERSION}/kubepreflight_\${VERSION}_linux_amd64.tar.gz"
+curl -LO \\
+  "https://github.com/${site.repositoryOwner}/${site.repositoryName}/releases/download/\${VERSION}/kubepreflight_\${VERSION}_checksums.txt"
 
 grep "kubepreflight_\${VERSION}_linux_amd64.tar.gz" "kubepreflight_\${VERSION}_checksums.txt" | sha256sum -c -
 
@@ -24,8 +26,10 @@ kubepreflight --help`;
 
 const macInstall = `VERSION=${VERSION}
 
-curl -LO "https://github.com/imneeteeshyadav98/kubepreflight/releases/download/\${VERSION}/kubepreflight_\${VERSION}_darwin_arm64.tar.gz"
-curl -LO "https://github.com/imneeteeshyadav98/kubepreflight/releases/download/\${VERSION}/kubepreflight_\${VERSION}_checksums.txt"
+curl -LO \\
+  "https://github.com/${site.repositoryOwner}/${site.repositoryName}/releases/download/\${VERSION}/kubepreflight_\${VERSION}_darwin_arm64.tar.gz"
+curl -LO \\
+  "https://github.com/${site.repositoryOwner}/${site.repositoryName}/releases/download/\${VERSION}/kubepreflight_\${VERSION}_checksums.txt"
 
 grep "kubepreflight_\${VERSION}_darwin_arm64.tar.gz" "kubepreflight_\${VERSION}_checksums.txt" | shasum -a 256 -c -
 
@@ -36,8 +40,8 @@ kubepreflight --help`;
 
 const gatekeeperFix = `xattr -d com.apple.quarantine /usr/local/bin/kubepreflight`;
 
-const dockerInstall = `docker pull ghcr.io/imneeteeshyadav98/kubepreflight:${site.currentDockerTag}
-docker run --rm ghcr.io/imneeteeshyadav98/kubepreflight:${site.currentDockerTag} --help`;
+const dockerInstall = `docker pull ghcr.io/${site.repositoryOwner}/${site.repositoryName}:${site.latestDockerTag}
+docker run --rm ghcr.io/${site.repositoryOwner}/${site.repositoryName}:${site.latestDockerTag} --help`;
 
 const checksumVerify = `sha256sum -c kubepreflight_${VERSION}_checksums.txt      # Linux
 shasum -a 256 -c kubepreflight_${VERSION}_checksums.txt  # macOS`;
@@ -144,9 +148,9 @@ const providerSupport = [
 
       <p class="mt-6 max-w-2xl text-lg leading-relaxed text-text-muted">
         A single static binary. No cluster agent, no webhook, no persistent credentials. Every
-        command below is pinned to <span class="font-mono text-text-primary">{VERSION}</span> — the
-        exact release the EKS case study ran against — not a moving <span class="font-mono">latest</span>
-        tag.
+        command below is pinned to the current release,{' '}
+        <span class="font-mono text-text-primary">{VERSION}</span> — not a moving{' '}
+        <span class="font-mono">latest</span> tag.
       </p>
     </Container>
   </Section>
@@ -481,17 +485,23 @@ const providerSupport = [
     <Container>
       <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
         <div class="max-w-xl">
-          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Stuck on something?</h2>
+          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Need help with a scan?</h2>
           <p class="mt-4 leading-relaxed text-text-muted">
-            Open an issue on GitHub, or wire the same scan into CI so it runs automatically on
-            every pull request.
+            Review the documentation or open a GitHub issue with the sanitized command, KubePreflight
+            version, target Kubernetes version, and relevant report excerpt. Never include real
+            credentials, kubeconfig contents, AWS account IDs, private hostnames, or unreviewed
+            findings artifacts.
+          </p>
+          <p class="mt-4 text-sm text-text-muted">
+            Looking to gate every pull request automatically instead of running scans by hand? That's
+            a separate setup step — see the GitHub Action.
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
-          <Button href="/github-action">Set up the GitHub Action</Button>
           <IconLink href={site.issuesUrl} icon="external" external>
             Open an issue
           </IconLink>
+          <Button href="/github-action" variant="secondary">Set up the GitHub Action</Button>
         </div>
       </div>
     </Container>

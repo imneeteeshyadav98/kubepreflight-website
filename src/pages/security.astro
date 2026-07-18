@@ -53,10 +53,13 @@ const artifactRows = [
   ['report.html', 'Self-contained HTML report with the embedded KubePreflight Console.']
 ];
 
-const verifyRelease = `VERSION=${site.currentVersion}
+const verifyRelease = `VERSION=${site.latestReleaseVersion}
 
-curl -LO "https://github.com/imneeteeshyadav98/kubepreflight/releases/download/\${VERSION}/kubepreflight_\${VERSION}_linux_amd64.tar.gz"
-curl -LO "https://github.com/imneeteeshyadav98/kubepreflight/releases/download/\${VERSION}/kubepreflight_\${VERSION}_checksums.txt"
+curl -LO \\
+  "https://github.com/${site.repositoryOwner}/${site.repositoryName}/releases/download/\${VERSION}/kubepreflight_\${VERSION}_linux_amd64.tar.gz"
+curl -LO \\
+  "https://github.com/${site.repositoryOwner}/${site.repositoryName}/releases/download/\${VERSION}/kubepreflight_\${VERSION}_checksums.txt"
+
 grep "kubepreflight_\${VERSION}_linux_amd64.tar.gz" "kubepreflight_\${VERSION}_checksums.txt" | sha256sum -c -`;
 
 const structuredData = {

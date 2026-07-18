@@ -18,9 +18,13 @@ const paths = [
 ];
 
 const viewports = [
-  { width: 390, height: 844, label: 'mobile' },
-  { width: 768, height: 1024, label: 'tablet' },
-  { width: 1280, height: 900, label: 'desktop' }
+  { width: 390, height: 844, label: 'mobile-390x844' },
+  { width: 430, height: 932, label: 'mobile-430x932' },
+  { width: 768, height: 500, label: 'tablet-768x500-landscape' },
+  { width: 1024, height: 768, label: 'tablet-1024x768' },
+  { width: 1280, height: 720, label: 'desktop-1280x720' },
+  { width: 1440, height: 900, label: 'desktop-1440x900' },
+  { width: 1920, height: 1080, label: 'desktop-1920x1080' }
 ];
 
 const chrome = spawn(chromeBin, [

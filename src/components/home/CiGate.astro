@@ -17,11 +17,15 @@ const withGate = [
   'Score, blockers, and recommendation posted on the check'
 ];
 
-const actionYaml = `- uses: imneeteeshyadav98/kubepreflight/compare@${site.currentVersion}
-  with:
-    baseline: baseline-findings.json
-    current: current-findings.json
-    fail-on-new-blockers: 'true'`;
+const actionYaml = `permissions:
+  contents: read
+
+steps:
+  - uses: ${site.repositoryOwner}/${site.repositoryName}/compare@${site.latestReleaseVersion}
+    with:
+      baseline: baseline-findings.json
+      current: current-findings.json
+      fail-on-new-blockers: 'true'`;
 ---
 
 <Section tone="ink">

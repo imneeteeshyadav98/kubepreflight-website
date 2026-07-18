@@ -36,7 +36,7 @@ export const footerColumns: readonly FooterColumn[] = [
   {
     heading: 'Repository',
     items: [
-      { label: 'Source & docs', href: 'https://github.com/imneeteeshyadav98/kubepreflight', external: true },
+      { label: 'Source & docs', href: site.githubUrl, external: true },
       { label: 'Releases', href: site.releasesUrl, external: true },
       { label: 'Issues', href: site.issuesUrl, external: true },
       { label: 'License (Apache-2.0)', href: site.licenseUrl, external: true }
