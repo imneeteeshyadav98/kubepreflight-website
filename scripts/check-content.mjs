@@ -25,6 +25,7 @@ const sourceFiles = [
   'src/pages/index.astro',
   'src/pages/docs.astro',
   'src/pages/eks-upgrade-readiness.astro',
+  'src/pages/kubernetes-upgrade-checklist.astro',
   'src/pages/install.astro',
   'src/pages/use-cases.astro',
   'src/pages/github-action.astro',
@@ -95,6 +96,31 @@ check(
 check(
   'eks-upgrade-readiness.astro: uses Cloudflare-safe CodeBlock for command example',
   eksGuide.includes('<CodeBlock') && eksGuide.includes('copyLabel="Copy EKS readiness scan"')
+);
+
+// --- SEO-001B: Kubernetes upgrade checklist ---
+const upgradeChecklist = read('src/pages/kubernetes-upgrade-checklist.astro');
+for (const phrase of [
+  'Kubernetes Upgrade Checklist',
+  'not just Amazon EKS',
+  'Pre-upgrade preparation',
+  'Admission webhooks',
+  'Workloads and disruption',
+  'Nodes and capacity',
+  'Add-ons and controllers',
+  'Cluster health',
+  'Upgrade should not proceed',
+  'It does not perform upgrades, apply remediations, or mutate cluster resources'
+]) {
+  check(`kubernetes-upgrade-checklist.astro: required phrase present: ${phrase}`, upgradeChecklist.includes(phrase));
+}
+check(
+  'kubernetes-upgrade-checklist.astro: current release does not claim version command support',
+  !/kubepreflight\s+(--version|version)/.test(upgradeChecklist)
+);
+check(
+  'kubernetes-upgrade-checklist.astro: uses Cloudflare-safe CodeBlock for command example',
+  upgradeChecklist.includes('<CodeBlock') && upgradeChecklist.includes('copyLabel="Copy scan command"')
 );
 
 // --- Fix #1 / #2: comparison PASS vs upgrade-readiness, strict vs comparison gate ---

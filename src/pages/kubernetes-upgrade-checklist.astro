@@ -1,0 +1,455 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/layout/Container.astro';
+import Section from '../components/layout/Section.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import IconLink from '../components/ui/IconLink.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import { site } from '../content/site';
+
+const scanCommand = `kubepreflight scan \\
+  --target-version 1.32 \\
+  --output all`;
+
+const checklistAreas = [
+  {
+    title: 'Pre-upgrade preparation',
+    items: [
+      'Current Kubernetes version and target Kubernetes version',
+      'A supported upgrade path between the two',
+      'A scheduled maintenance window',
+      'A documented rollback and recovery plan',
+      'Verified backups and recovery readiness',
+      'Confirmed cluster access for everyone running the change',
+      'Clear team ownership and sign-off before the window opens'
+    ]
+  },
+  {
+    title: 'API compatibility',
+    items: [
+      'Removed APIs in the target Kubernetes minor version',
+      'Deprecated APIs still in use',
+      'Raw manifests referencing an old apiVersion',
+      'Helm chart templates, not just installed release values',
+      'Controllers and operators that emit deprecated objects',
+      'CRDs and their conversion webhooks'
+    ]
+  },
+  {
+    title: 'Admission webhooks',
+    items: [
+      'Webhook backend availability',
+      'Supported API versions',
+      'Timeout configuration',
+      'Failure policy (Ignore vs. Fail)',
+      'Namespace and object selectors',
+      'Certificate validity',
+      'Service reachability from the API server'
+    ]
+  },
+  {
+    title: 'Workloads and disruption',
+    items: [
+      'Unhealthy Deployments and StatefulSets',
+      'Pods stuck Pending',
+      'Crash-looping containers',
+      'Replica counts relative to disruption budgets',
+      'PodDisruptionBudgets that are too strict to allow drain',
+      'Singleton workloads with no redundancy',
+      'hostPath or local PersistentVolume usage',
+      'Anti-affinity and topology spread constraints',
+      'hostPort usage that limits rescheduling'
+    ]
+  },
+  {
+    title: 'Nodes and capacity',
+    items: [
+      'Kubelet version skew against the target control-plane version',
+      'NotReady nodes',
+      'Available scheduling capacity for rescheduled pods',
+      'A drain simulation before the real maintenance window',
+      'DaemonSets that must tolerate the upgrade',
+      'Local storage tied to a specific node',
+      'Control-plane-before-nodes upgrade order'
+    ]
+  },
+  {
+    title: 'Add-ons and controllers',
+    items: [
+      'CoreDNS version compatibility',
+      'CSI driver compatibility',
+      'metrics-server',
+      'Ingress controllers',
+      'cert-manager',
+      'external-dns',
+      'Cloud-controller-manager components',
+      'Custom operators your workloads depend on'
+    ]
+  },
+  {
+    title: 'Cluster health',
+    items: [
+      'APIService availability and health',
+      'Webhook health',
+      'DNS resolution',
+      'Storage provisioning',
+      'Networking',
+      'Control-plane health',
+      'Any already-pending upgrades',
+      'Active incidents that should delay the window'
+    ]
+  }
+];
+
+const gateResults = [
+  ['Blocker', 'Upgrade should not proceed', 'Resolve and re-scan'],
+  ['Warning', 'Upgrade may proceed with risk', 'Review and document'],
+  ['Info', 'Advisory context', 'Track if relevant'],
+  ['Incomplete evidence', 'Readiness is not fully known', 'Restore evidence coverage']
+];
+
+const changeWindow = {
+  before: ['Final scan', 'Review blockers', 'Confirm backups', 'Confirm owners', 'Confirm rollback/recovery path'],
+  during: ['Monitor control plane', 'Monitor nodes and workloads', 'Validate DNS/network/storage', 'Record changes and timestamps'],
+  after: ['Re-scan', 'Compare before/after findings', 'Validate applications', 'Review rollback readiness', 'Preserve evidence']
+};
+
+const workflow = ['Scan', 'Review', 'Plan', 'Remediate', 'Re-scan', 'Compare', 'Upgrade', 'Validate', 'Assess rollback readiness'];
+
+const faqs = [
+  {
+    question: 'What should I check before upgrading a Kubernetes cluster?',
+    answer:
+      'Check API compatibility, admission webhooks, workload health, PodDisruptionBudgets, node and kubelet skew, add-on and controller compatibility, cluster health, and rollback/recovery readiness -- and confirm you have a maintenance window, backups, and clear ownership before you start.'
+  },
+  {
+    question: 'How do I find deprecated or removed Kubernetes APIs before an upgrade?',
+    answer:
+      'Check live cluster objects, raw manifests, Helm chart templates (not just installed release values), and any controllers or operators that emit objects on your behalf -- a version bump to a chart does not help if the template source still renders a removed apiVersion.'
+  },
+  {
+    question: 'Can a PodDisruptionBudget block a Kubernetes node upgrade?',
+    answer:
+      'Yes. A PDB that allows too few disruptions, combined with low replica counts or tight scheduling constraints, can keep node drain from evicting pods, which stalls the upgrade.'
+  },
+  {
+    question: 'Do admission webhooks need to be checked before a Kubernetes upgrade?',
+    answer:
+      'Yes. An unreachable webhook backend, an overly broad selector, an incompatible API version, or an expired certificate can block ordinary creates, updates, and deletes during the upgrade window.'
+  },
+  {
+    question: 'Should add-ons be upgraded before or after the control plane?',
+    answer:
+      'Treat add-on order as a reviewed change-plan decision, not a default. Compatibility depends on the specific versions installed and each vendor’s own supported skew -- verify CoreDNS, CSI drivers, ingress controllers, and other add-ons against your target Kubernetes version before the window, rather than assuming automatic compatibility.'
+  },
+  {
+    question: 'What is the difference between an upgrade blocker and a warning?',
+    answer:
+      'A blocker is a finding that should stop the upgrade plan until it is fixed or explicitly accepted. A warning is a risk or advisory that should stay visible in the change review but does not have to stop the plan by itself.'
+  },
+  {
+    question: 'Can KubePreflight perform the Kubernetes upgrade for me?',
+    answer:
+      'No. KubePreflight assesses and explains upgrade readiness. It does not perform upgrades, apply remediations, or mutate cluster resources -- decisions and changes stay with the operator.'
+  }
+];
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: 'Kubernetes Upgrade Checklist',
+    description:
+      'Use this Kubernetes upgrade checklist to review APIs, webhooks, workloads, PodDisruptionBudgets, nodes, add-ons, capacity, cluster health, and recovery readiness before upgrading.',
+    url: `${site.url}/kubernetes-upgrade-checklist`,
+    publisher: {
+      '@type': 'Organization',
+      name: site.name,
+      url: site.url
+    }
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer
+      }
+    }))
+  }
+];
+---
+
+<BaseLayout
+  title="Kubernetes Upgrade Checklist"
+  description="Use this Kubernetes upgrade checklist to review APIs, webhooks, workloads, PodDisruptionBudgets, nodes, add-ons, capacity, cluster health, and recovery readiness before upgrading."
+  structuredData={structuredData}
+>
+  <Section tone="ink" spacing="md">
+    <Container>
+      <a href="/" class="text-sm text-text-muted transition-colors duration-150 hover:text-text-primary">
+        Back to home
+      </a>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <Badge tone="blue">Kubernetes</Badge>
+        <Badge tone="neutral">Upgrade checklist</Badge>
+      </div>
+
+      <h1 class="mt-5 max-w-3xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
+        Kubernetes Upgrade Checklist
+      </h1>
+
+      <p class="mt-6 max-w-3xl text-lg leading-relaxed text-text-muted">
+        What to verify before you upgrade any Kubernetes cluster -- not just Amazon EKS.
+        Preparation, API compatibility, admission webhooks, workloads, nodes, add-ons, cluster
+        health, and recovery readiness, in one reviewable checklist.
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <Button href="/docs/">Run your first scan</Button>
+        <Button href="/eks-upgrade-readiness/" variant="secondary">Running EKS? Read the EKS guide</Button>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Before you start</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Seven areas to check before the window opens.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          A Kubernetes upgrade rarely fails for one big reason. It fails because several small
+          assumptions -- an old apiVersion, a strict PDB, an unreachable webhook, a version-pinned
+          add-on -- all turn out to be wrong at the same time.
+        </p>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+        {
+          checklistAreas.map((area) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5">
+              <h3 class="font-mono text-sm text-text-primary">{area.title}</h3>
+              <ul class="mt-3 space-y-2">
+                {area.items.map((item) => (
+                  <li class="flex gap-2 text-sm leading-relaxed text-text-muted">
+                    <span aria-hidden="true" class="mt-1 text-signal">&#8226;</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">API compatibility</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Check manifests and live objects, not just release notes.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Kubernetes release notes list removed and deprecated APIs, but they do not tell you
+            whether <em>your</em> manifests, Helm chart templates, or controllers still emit them.
+            A manifests-only scan works before you touch a live cluster.
+          </p>
+          <p class="mt-4 text-sm leading-relaxed text-text-muted">
+            This example targets Kubernetes 1.32 and writes JSON, Markdown, and HTML reports. See
+            the docs for the manifests-only and live-cluster variants.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-x-6 gap-y-3">
+            <IconLink href="/docs/#quick-start">Quick start docs</IconLink>
+            <IconLink href="/install/">Install KubePreflight</IconLink>
+          </div>
+        </div>
+        <div class="lg:col-span-7">
+          <CodeBlock
+            title="Kubernetes upgrade readiness scan"
+            code={scanCommand}
+            copyable
+            kind="command"
+            copyLabel="Copy scan command"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="paper">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">Go / no-go gate</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+          Turn findings into a decision, not just a list.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted-dark">
+          Every finding resolves to one of four results. Treat incomplete evidence as an unknown,
+          not as a pass.
+        </p>
+      </div>
+
+      <div class="mt-10 overflow-hidden rounded-[var(--radius-md)] border border-border-dark">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[560px] border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-b border-border-dark bg-paper-dim">
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted-dark">Result</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted-dark">Meaning</th>
+                <th scope="col" class="px-5 py-3 font-mono text-xs uppercase tracking-wide text-text-muted-dark">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                gateResults.map((row, index) => (
+                  <tr class={index < gateResults.length - 1 ? 'border-b border-border-dark' : ''}>
+                    <td class="px-5 py-4 align-top font-mono text-xs text-text-dark">{row[0]}</td>
+                    <td class="px-5 py-4 align-top text-text-muted-dark">{row[1]}</td>
+                    <td class="px-5 py-4 align-top text-text-muted-dark">{row[2]}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Change window</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          A compact operational checklist for the window itself.
+        </h2>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5">
+          <h3 class="font-mono text-sm text-text-primary">Before the window</h3>
+          <ul class="mt-3 space-y-2">
+            {changeWindow.before.map((item) => (
+              <li class="flex gap-2 text-sm leading-relaxed text-text-muted">
+                <span aria-hidden="true" class="mt-1 text-signal">&#8226;</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5">
+          <h3 class="font-mono text-sm text-text-primary">During the window</h3>
+          <ul class="mt-3 space-y-2">
+            {changeWindow.during.map((item) => (
+              <li class="flex gap-2 text-sm leading-relaxed text-text-muted">
+                <span aria-hidden="true" class="mt-1 text-signal">&#8226;</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5">
+          <h3 class="font-mono text-sm text-text-primary">After the window</h3>
+          <ul class="mt-3 space-y-2">
+            {changeWindow.after.map((item) => (
+              <li class="flex gap-2 text-sm leading-relaxed text-text-muted">
+                <span aria-hidden="true" class="mt-1 text-signal">&#8226;</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">KubePreflight workflow</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+            One repeatable path from scan to validated upgrade.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            KubePreflight assesses and explains upgrade readiness. It does not perform the
+            upgrade, apply remediations automatically, or guarantee upgrade success -- decisions
+            and changes stay with the operator.
+          </p>
+        </div>
+        <div class="lg:col-span-7">
+          <ol class="flex flex-wrap items-center gap-x-2 gap-y-3 text-sm">
+            {
+              workflow.map((step, index) => (
+                <li class="flex items-center gap-2">
+                  <span class="rounded-[var(--radius-md)] border border-border-dark bg-paper-dim px-3 py-2 font-mono text-xs text-text-dark">
+                    {step}
+                  </span>
+                  {index < workflow.length - 1 && <span aria-hidden="true" class="text-text-muted-dark">&rarr;</span>}
+                </li>
+              ))
+            }
+          </ol>
+          <div class="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+            <a href="/docs/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">Docs</a>
+            <a href="/eks-upgrade-readiness/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">EKS upgrade readiness</a>
+            <a href="/install/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">Install</a>
+            <a href="/github-action/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">GitHub Action</a>
+            <a href="/security/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">Security</a>
+            <a href="/case-study/eks-1-31-to-1-32/" class="text-sm text-text-dark underline decoration-border-dark underline-offset-4 hover:text-signal-dim">Real EKS case study</a>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">FAQ</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Common Kubernetes upgrade checklist questions.
+        </h2>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {
+          faqs.map((item) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-6">
+              <h3 class="font-mono text-sm text-text-primary">{item.question}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{item.answer}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink" border={false}>
+    <Container>
+      <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-xl">
+          <h2 class="font-editorial text-3xl text-text-primary sm:text-4xl">Ready to run the checklist?</h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Start with the first-user docs journey, then attach the generated reports to your
+            change record.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+          <Button href="/docs/">Run your first scan</Button>
+          <IconLink href="/eks-upgrade-readiness/">Running EKS? Read the EKS guide</IconLink>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>
