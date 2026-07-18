@@ -1,0 +1,38 @@
+---
+import Container from '../layout/Container.astro';
+import Section from '../layout/Section.astro';
+import Button from '../ui/Button.astro';
+---
+
+<Section tone="ink-raised">
+  <Container>
+    <div class="mx-auto max-w-3xl text-center">
+      <span class="font-mono text-xs uppercase tracking-wide text-text-muted">See it in action</span>
+      <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+        From evidence to a reviewable decision.
+      </h2>
+      <p class="mt-4 leading-relaxed text-text-muted">
+        This walkthrough replays the public, sanitized EKS 1.31 → 1.32 case-study artifacts. It
+        shows the real comparison output, embedded Console, readiness movement, remaining
+        blockers, and next actions.
+      </p>
+    </div>
+
+    <div class="mt-10 overflow-hidden rounded-[var(--radius-md)] border border-border">
+      <img
+        src="/media/kubepreflight-case-study-workflow.gif"
+        alt="Terminal replaying sanitized real-EKS case-study evidence with kubepreflight compare, followed by the same evidence in the embedded KubePreflight Console showing readiness movement, blockers, and next actions."
+        loading="lazy"
+        decoding="async"
+        width="1100"
+        height="688"
+        class="w-full"
+      />
+    </div>
+
+    <div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
+      <Button href="/case-study/eks-1-31-to-1-32" variant="secondary">View the full EKS case study</Button>
+      <Button href="/install">Install KubePreflight</Button>
+    </div>
+  </Container>
+</Section>
