@@ -1,7 +1,7 @@
 # KubePreflight website
 
 [![CI](https://github.com/imneeteeshyadav98/kubepreflight-website/actions/workflows/ci.yml/badge.svg)](https://github.com/imneeteeshyadav98/kubepreflight-website/actions/workflows/ci.yml)
-[![Deploy](https://github.com/imneeteeshyadav98/kubepreflight-website/actions/workflows/deploy.yml/badge.svg)](https://github.com/imneeteeshyadav98/kubepreflight-website/actions/workflows/deploy.yml)
+[![Deploy](https://github.com/imneeteeshyadav98/kubepreflight-website/actions/workflows/deploy-digitalocean.yml/badge.svg)](https://github.com/imneeteeshyadav98/kubepreflight-website/actions/workflows/deploy-digitalocean.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 Marketing and evidence site for [KubePreflight](https://github.com/imneeteeshyadav98/kubepreflight): Kubernetes upgrade readiness, EKS rollback decision support, and CI regression gating. Detailed technical documentation lives in the core repository; this site summarizes the product and routes visitors there.
@@ -9,13 +9,19 @@ Marketing and evidence site for [KubePreflight](https://github.com/imneeteeshyad
 **Live site:** [kubepreflight.com](https://kubepreflight.com)
 **Core repository:** [imneeteeshyadav98/kubepreflight](https://github.com/imneeteeshyadav98/kubepreflight)
 
+<p align="center">
+  <img src="docs/assets/kubepreflight-site-tour.gif" alt="A tour of the KubePreflight website: the homepage, the real EKS 1.31-to-1.32 evidence panel, use cases, the GitHub Action regression gate, the full case study, and the security page's read-only boundaries." width="820" />
+</p>
+
+<p align="center"><sub>Homepage → real evidence → CI regression gate → case study → security. Captured from production at <a href="https://kubepreflight.com">kubepreflight.com</a>. For the CLI/Console demo against real EKS case-study evidence, see the <a href="https://github.com/imneeteeshyadav98/kubepreflight">core repository</a>.</sub></p>
+
 ## Stack
 
 - [Astro](https://astro.build) — static output, minimal client JavaScript
 - Tailwind CSS 4 (via `@tailwindcss/vite`), with design tokens in [`src/styles/tokens.css`](src/styles/tokens.css)
 - TypeScript, strict mode
 - `@astrojs/sitemap` for sitemap generation
-- GitHub Pages + GitHub Actions for hosting and deployment
+- DigitalOcean (nginx) behind Cloudflare, deployed via GitHub Actions — see [Deployment](#deployment)
 
 ## Requirements
 
@@ -116,11 +122,11 @@ Headings and mono text use system font stacks (no webfont network requests), whi
 
 ## Deployment
 
-Static output, deployed to GitHub Pages, served at `kubepreflight.com`.
+Static output, served from a DigitalOcean droplet (nginx) behind Cloudflare at `kubepreflight.com`.
 
-- CI (`.github/workflows/ci.yml`) runs `npm run check` and `npm run build` on every push and pull request.
-- Production deployment (`.github/workflows/deploy.yml`) runs on pushes to `main`, runs `build:prod`, uploads `dist/`, and deploys through GitHub Pages.
-- Custom domain is committed through `public/CNAME`; repository Pages source must be set to GitHub Actions.
+- CI (`.github/workflows/ci.yml`) runs `npm run verify` on every push and pull request.
+- Production deployment (`.github/workflows/deploy-digitalocean.yml`) runs on pushes to `main`: builds via `build:prod`, rsyncs an atomic release to the droplet, and activates it with a smoke-checked, auto-rollback-on-failure script.
+- Full droplet bootstrap, GitHub Actions secrets, and rollback runbook: [`docs/deployment.md`](docs/deployment.md).
 
 ### Bumping the pinned KubePreflight release
 
