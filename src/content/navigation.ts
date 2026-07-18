@@ -7,6 +7,7 @@ export interface NavItem {
 }
 
 export const primaryNav: readonly NavItem[] = [
+  { label: 'Docs', href: '/docs' },
   { label: 'Install', href: '/install' },
   { label: 'Use cases', href: '/use-cases' },
   { label: 'GitHub Action', href: '/github-action' },
@@ -23,6 +24,7 @@ export const footerColumns: readonly FooterColumn[] = [
   {
     heading: 'Product',
     items: [
+      { label: 'Docs', href: '/docs' },
       { label: 'Install', href: '/install' },
       { label: 'Use cases', href: '/use-cases' },
       { label: 'GitHub Action', href: '/github-action' },

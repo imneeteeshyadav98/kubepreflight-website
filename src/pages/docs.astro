@@ -1,0 +1,644 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/layout/Container.astro';
+import Section from '../components/layout/Section.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import IconLink from '../components/ui/IconLink.astro';
+import CodeBlock from '../components/ui/CodeBlock.astro';
+import { site } from '../content/site';
+
+const VERSION = site.latestReleaseVersion;
+const DOCKER_TAG = site.latestDockerTag;
+const ACTION_REF = site.latestGitHubActionRef;
+
+const journey = [
+  { label: 'Install', href: '#install', detail: 'Binary, Docker, checksums, and release pinning.' },
+  { label: 'Quick start', href: '#quick-start', detail: 'The smallest useful cluster and EKS scans.' },
+  { label: 'First EKS scan', href: '#first-eks-scan', detail: 'Cluster evidence, AWS enrichment, manifests, and incomplete coverage.' },
+  { label: 'Findings', href: '#findings', detail: 'Severity, priority, confidence, evidence, score, and API summaries.' },
+  { label: 'Plan', href: '#upgrade-plan', detail: 'Immediate next hop, predicted future hops, and action plans.' },
+  { label: 'Compare', href: '#compare', detail: 'Baseline/current progress tracking and CI gate policy.' },
+  { label: 'Rollback', href: '#rollback-readiness', detail: 'Eligibility, readiness, recommendations, and limits.' },
+  { label: 'Redaction', href: '#redaction', detail: 'Safe sharing with supported sensitive-identifier redaction.' },
+  { label: 'Exit codes', href: '#exit-codes-ci', detail: 'How CI should interpret findings versus execution failures.' },
+  { label: 'After scan', href: '#after-scan', detail: 'Review, remediate, re-scan, compare, and archive evidence.' }
+];
+
+const linuxInstall = `VERSION=${VERSION}
+
+curl -LO \\
+  "https://github.com/${site.repositoryOwner}/${site.repositoryName}/releases/download/\${VERSION}/kubepreflight_\${VERSION}_linux_amd64.tar.gz"
+curl -LO \\
+  "https://github.com/${site.repositoryOwner}/${site.repositoryName}/releases/download/\${VERSION}/kubepreflight_\${VERSION}_checksums.txt"
+
+grep "kubepreflight_\${VERSION}_linux_amd64.tar.gz" "kubepreflight_\${VERSION}_checksums.txt" | sha256sum -c -
+
+tar -xzf "kubepreflight_\${VERSION}_linux_amd64.tar.gz"
+sudo install -m 0755 "kubepreflight_\${VERSION}_linux_amd64/kubepreflight" /usr/local/bin/kubepreflight
+
+kubepreflight --help`;
+
+const dockerInstall = `docker pull ghcr.io/${site.repositoryOwner}/${site.repositoryName}:${DOCKER_TAG}
+docker run --rm ghcr.io/${site.repositoryOwner}/${site.repositoryName}:${DOCKER_TAG} --help`;
+
+const quickClusterScan = `kubepreflight scan \\
+  --target-version 1.32`;
+
+const quickEksScan = `kubepreflight scan \\
+  --provider eks \\
+  --cluster-name my-cluster \\
+  --target-version 1.32 \\
+  --output all`;
+
+const firstEksScan = `kubepreflight scan \\
+  --provider eks \\
+  --cluster-name my-cluster \\
+  --target-version 1.32 \\
+  --redact-sensitive-identifiers \\
+  --output all`;
+
+const manifestScan = `kubepreflight scan \\
+  --manifests-only \\
+  --manifests ./k8s \\
+  --target-version 1.32 \\
+  --redact-sensitive-identifiers \\
+  --output all`;
+
+const planCommand = `kubepreflight plan \\
+  --provider eks \\
+  --cluster-name my-cluster \\
+  --from-version auto \\
+  --to-version 1.34 \\
+  --redact-sensitive-identifiers \\
+  --output all \\
+  --action-plan-out action-plan.json \\
+  --action-plan-md action-plan.md`;
+
+const compareCommand = `kubepreflight compare \\
+  --baseline previous-findings.json \\
+  --current current-findings.json \\
+  --json-out comparison.json \\
+  --markdown-out comparison.md \\
+  --gate-out gate.json \\
+  --redact-sensitive-identifiers`;
+
+const compareAction = `permissions:
+  contents: read
+
+steps:
+  - uses: actions/checkout@v7
+    with:
+      ref: \${{ github.event.pull_request.base.sha }}
+      path: base
+
+  - uses: ${site.repositoryOwner}/${site.repositoryName}@${ACTION_REF}
+    id: baseline
+    with:
+      target-version: '1.32'
+      manifests: './base/deploy'
+      manifests-only: 'true'
+      findings-out: 'baseline-findings.json'
+
+  - uses: actions/checkout@v7
+    with:
+      ref: \${{ github.event.pull_request.head.sha }}
+      path: head
+
+  - uses: ${site.repositoryOwner}/${site.repositoryName}@${ACTION_REF}
+    id: current
+    with:
+      target-version: '1.32'
+      manifests: './head/deploy'
+      manifests-only: 'true'
+      findings-out: 'current-findings.json'
+
+  - uses: ${site.repositoryOwner}/${site.repositoryName}/compare@${ACTION_REF}
+    with:
+      baseline: \${{ steps.baseline.outputs.findings-file }}
+      current: \${{ steps.current.outputs.findings-file }}
+      gate-out: gate.json`;
+
+const rollbackPlan = `kubepreflight rollback plan \\
+  --provider eks \\
+  --cluster-name my-cluster \\
+  --redact-sensitive-identifiers \\
+  --output all`;
+
+const rollbackAssess = `kubepreflight rollback assess \\
+  --provider eks \\
+  --cluster-name my-cluster \\
+  --findings findings.json \\
+  --redact-sensitive-identifiers \\
+  --output all`;
+
+const ciCapture = `set +e
+kubepreflight scan \\
+  --target-version 1.32 \\
+  --output all \\
+  --output-dir ./kubepreflight-report \\
+  --terminal-output compact
+status=$?
+set -e
+
+case "$status" in
+  0) echo "KubePreflight clean";;
+  1) echo "KubePreflight warnings present";;
+  2) echo "KubePreflight blockers present"; exit 1;;
+  3) echo "KubePreflight evidence incomplete"; exit 1;;
+  4) echo "KubePreflight execution failed before a trustworthy report was produced"; exit 1;;
+  *) echo "Unexpected KubePreflight exit code: $status"; exit 1;;
+esac`;
+
+const findingTerms = [
+  ['Blocker', 'A finding that should stop the upgrade plan until it is remediated or explicitly accepted.'],
+  ['Warning', 'A risk or follow-up item that should stay visible in the change review.'],
+  ['Info', 'Inventory or context that helps explain the environment but does not gate the exit code.'],
+  ['Priority', 'P1-P4 ordering for operational attention. Severity answers whether it blocks; priority answers what to handle first.'],
+  ['Confidence', 'How strongly the available evidence supports the finding. Lower confidence should trigger closer review, not blind dismissal.'],
+  ['Evidence', 'The observed Kubernetes, AWS, or manifest facts behind the finding.'],
+  ['Remediation', 'The suggested operator action. KubePreflight does not apply it automatically.'],
+  ['Affected resources', 'The objects or resource labels tied to the finding. Review these carefully before sharing reports.'],
+  ['Readiness score', 'A summary signal for scan posture. It is useful for comparison, but it is not a guarantee.'],
+  ['API Compatibility summary', 'A grouped view of removed and deprecated API families, including derived resource summaries.'],
+  ['canUpgradeContinue', 'A per-finding field that marks whether that specific issue blocks continuing the upgrade.']
+];
+
+const evidenceRows = [
+  ['Kubernetes cluster evidence', 'Collected through kubeconfig and read-only Kubernetes RBAC. Includes workload, API, webhook, PDB, node, and cluster state.'],
+  ['AWS/EKS enrichment', 'Enabled with --provider eks and --cluster-name. Uses read-only AWS APIs for EKS insights, add-ons, node groups, and rollback context.'],
+  ['Manifest evidence', 'Collected from YAML or Helm-rendered manifests. Manifest-only scans do not require cluster or AWS access.'],
+  ['Incomplete evidence', 'Reported when a requested evidence plane cannot be fully collected. Missing evidence should not be converted into a clean result.']
+];
+
+const exitCodes = [
+  ['0', 'Clean - no blockers or warnings.'],
+  ['1', 'Warnings only. Review before proceeding, especially in CI.'],
+  ['2', 'Blockers found. Treat as a failed readiness gate.'],
+  ['3', 'Assessment incomplete because requested evidence could not be collected. A report may exist, but coverage gaps are part of the result.'],
+  ['4', 'Infrastructure failure before a trustworthy scan report was produced, such as kubeconfig/client construction or collector failure.']
+];
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: 'KubePreflight first-user documentation journey',
+  description:
+    'Install KubePreflight, run a first Kubernetes or Amazon EKS upgrade-readiness scan, understand findings, plan upgrades, compare scans, assess rollback readiness, redact reports, and use exit codes in CI.',
+  url: `${site.url}/docs`,
+  publisher: {
+    '@type': 'Organization',
+    name: site.name,
+    url: site.url
+  }
+};
+---
+
+<BaseLayout
+  title="Documentation"
+  description="A first-user KubePreflight documentation journey: installation, quick start, first EKS scan, findings, upgrade planning, scan comparison, rollback readiness, redaction, exit codes, and next actions."
+  structuredData={structuredData}
+>
+  <Section tone="ink" spacing="md">
+    <Container>
+      <a href="/" class="text-sm text-text-muted transition-colors duration-150 hover:text-text-primary">
+        Back to home
+      </a>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <Badge tone="blue">Documentation</Badge>
+        <Badge tone="neutral">{VERSION}</Badge>
+      </div>
+
+      <h1 class="mt-5 max-w-3xl font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl">
+        First-user KubePreflight journey.
+      </h1>
+
+      <p class="mt-6 max-w-3xl text-lg leading-relaxed text-text-muted">
+        KubePreflight assesses whether a Kubernetes or Amazon EKS upgrade is ready to proceed. It
+        identifies blockers, warnings, operational risks, API compatibility issues,
+        rollback-readiness signals, and evidence-backed next actions. It does not perform the
+        upgrade or automatically change the cluster.
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+        <Button href="#quick-start">Start quick scan</Button>
+        <IconLink href="/install">Install reference</IconLink>
+      </div>
+    </Container>
+  </Section>
+
+  <Section tone="ink-raised">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-4">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Reading order</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Follow the path, or jump to the job.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Platform engineers, SREs, application owners, and CI maintainers can all use the same
+            report artifacts. Start with install and quick start, then branch into EKS enrichment,
+            compare, rollback, or CI depending on the change you are reviewing.
+          </p>
+        </div>
+
+        <nav class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-8" aria-label="Documentation journey">
+          {
+            journey.map((item, index) => (
+              <a
+                href={item.href}
+                class="rounded-[var(--radius-md)] border border-border bg-ink-950 p-5 transition-colors duration-150 hover:border-signal"
+              >
+                <span class="font-mono text-xs text-signal">{String(index + 1).padStart(2, '0')}</span>
+                <span class="mt-2 block font-mono text-sm text-text-primary">{item.label}</span>
+                <span class="mt-2 block text-sm leading-relaxed text-text-muted">{item.detail}</span>
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="install" tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-4">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Install</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Pin the current public release.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            The website examples use <span class="font-mono text-text-primary">{VERSION}</span> for
+            GitHub release assets and <span class="font-mono text-text-primary">{DOCKER_TAG}</span>
+            for the GHCR image tag. Verify checksums before installing binaries, especially on
+            shared runners or production workstations.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-x-6 gap-y-3">
+            <IconLink href="/install">Full install guide</IconLink>
+            <IconLink href={site.releasesUrl} icon="external" external>GitHub Releases</IconLink>
+          </div>
+        </div>
+        <div class="lg:col-span-8">
+          <CodeBlock
+            title="Linux amd64 binary"
+            code={linuxInstall}
+            copyable
+            kind="command"
+            copyLabel="Copy Linux install command"
+          />
+          <CodeBlock
+            title="Docker image"
+            code={dockerInstall}
+            class="mt-6"
+            copyable
+            kind="command"
+            copyLabel="Copy Docker command"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="quick-start" tone="ink-raised">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Quick start</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Run the smallest useful scan.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Choose the target Kubernetes version explicitly. A cluster-only scan needs kubeconfig
+            access and read-only Kubernetes RBAC. Add EKS enrichment only when AWS credentials and
+            the read-only EKS permissions are available.
+          </p>
+          <p class="mt-4 text-sm leading-relaxed text-text-muted">
+            Generated artifacts are written locally: <span class="font-mono text-text-primary">findings.json</span>
+            always, plus <span class="font-mono text-text-primary">report.md</span> and{' '}
+            <span class="font-mono text-text-primary">report.html</span> when requested with{' '}
+            <span class="font-mono text-text-primary">--output all</span>.
+          </p>
+        </div>
+        <div class="flex flex-col gap-6 lg:col-span-7">
+          <CodeBlock
+            title="cluster-only scan"
+            code={quickClusterScan}
+            copyable
+            kind="command"
+            copyLabel="Copy cluster-only scan"
+          />
+          <CodeBlock
+            title="EKS-enriched scan"
+            code={quickEksScan}
+            copyable
+            kind="command"
+            copyLabel="Copy EKS-enriched scan"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="first-eks-scan" tone="ink">
+    <Container>
+      <div class="max-w-3xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted">First EKS scan</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+          Understand what evidence was actually collected.
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          EKS mode combines Kubernetes API evidence with AWS enrichment. If AWS collection fails,
+          KubePreflight should surface incomplete evidence instead of pretending the missing plane
+          was clean.
+        </p>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2">
+        {
+          evidenceRows.map((row) => (
+            <article class="rounded-[var(--radius-md)] border border-border bg-ink-900 p-5">
+              <h3 class="font-mono text-sm text-text-primary">{row[0]}</h3>
+              <p class="mt-3 text-sm leading-relaxed text-text-muted">{row[1]}</p>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <CodeBlock
+          title="shareable EKS report"
+          code={firstEksScan}
+          copyable
+          kind="command"
+          copyLabel="Copy redacted EKS scan"
+        />
+        <CodeBlock
+          title="offline manifest scan"
+          code={manifestScan}
+          copyable
+          kind="command"
+          copyLabel="Copy redacted manifest scan"
+        />
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="findings" tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-4">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">Understanding findings</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+            Read the evidence, not only the score.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            A clean score is not a guarantee that an upgrade cannot fail. KubePreflight reports the
+            evidence it could collect and explicitly surfaces coverage gaps.
+          </p>
+        </div>
+        <div class="lg:col-span-8">
+          <div class="overflow-hidden rounded-[var(--radius-md)] border border-border-dark">
+            <table class="w-full border-collapse text-left text-sm">
+              <tbody>
+                {
+                  findingTerms.map((row, index) => (
+                    <tr class={index < findingTerms.length - 1 ? 'border-b border-border-dark' : ''}>
+                      <td class="w-44 px-4 py-4 align-top font-mono text-xs text-text-dark">{row[0]}</td>
+                      <td class="px-4 py-4 align-top text-text-muted-dark">{row[1]}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="upgrade-plan" tone="ink-raised">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Upgrade planning</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Plan the path without executing the upgrade.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            <span class="font-mono text-text-primary">plan</span> scans the immediate next hop with
+            exact evidence, then marks later hops as predicted or carry-forward where evidence
+            would need to be re-collected. Re-scan each future hop when the cluster actually
+            reaches it.
+          </p>
+          <p class="mt-4 text-sm leading-relaxed text-text-muted">
+            Standard outputs include <span class="font-mono text-text-primary">findings.json</span>,{' '}
+            <span class="font-mono text-text-primary">report.md</span>,{' '}
+            <span class="font-mono text-text-primary">report.html</span>, and{' '}
+            <span class="font-mono text-text-primary">upgrade-plan.json</span>. Optional action
+            plan files are written only when requested.
+          </p>
+        </div>
+        <div class="lg:col-span-7">
+          <CodeBlock
+            title="upgrade plan"
+            code={planCommand}
+            copyable
+            kind="command"
+            copyLabel="Copy upgrade plan command"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="compare" tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Comparing scans</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Track readiness movement between two reports.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            <span class="font-mono text-text-primary">compare</span> matches findings by fingerprint
+            and reports new, resolved, changed, and unchanged findings. Use the same target version
+            for the baseline and current scan for the most meaningful comparison.
+          </p>
+          <p class="mt-4 text-sm leading-relaxed text-text-muted">
+            Without <span class="font-mono text-text-primary">--gate-out</span>, valid comparisons
+            exit successfully after writing the requested JSON or Markdown output. With a gate,
+            policy failures return a failing gate result for CI.
+          </p>
+        </div>
+        <div class="flex flex-col gap-6 lg:col-span-7">
+          <CodeBlock
+            title="CLI comparison"
+            code={compareCommand}
+            copyable
+            kind="command"
+            copyLabel="Copy compare command"
+          />
+          <CodeBlock
+            title=".github/workflows/kubepreflight-compare.yml"
+            code={compareAction}
+            copyable
+            kind="command"
+            copyLabel="Copy compare workflow"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="rollback-readiness" tone="ink-raised">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Rollback readiness</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Assess rollback posture without executing rollback.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            <span class="font-mono text-text-primary">rollback plan</span> is the pre-upgrade
+            posture check. <span class="font-mono text-text-primary">rollback assess</span> is the
+            post-upgrade readiness check and can include a recent{' '}
+            <span class="font-mono text-text-primary">findings.json</span> for operational context.
+          </p>
+          <p class="mt-4 text-sm leading-relaxed text-text-muted">
+            Eligibility, rollback window evidence, readiness, recommendation, confidence, and
+            blocker/advisory issues are separate signals. KubePreflight does not execute an EKS
+            rollback, and rollback eligibility alone is not a safety guarantee.
+          </p>
+          <IconLink href="/case-study/eks-1-31-to-1-32" class="mt-5">
+            See rollback in the EKS case study
+          </IconLink>
+        </div>
+        <div class="flex flex-col gap-6 lg:col-span-7">
+          <CodeBlock
+            title="pre-upgrade rollback posture"
+            code={rollbackPlan}
+            copyable
+            kind="command"
+            copyLabel="Copy rollback plan command"
+          />
+          <CodeBlock
+            title="post-upgrade rollback readiness"
+            code={rollbackAssess}
+            copyable
+            kind="command"
+            copyLabel="Copy rollback assess command"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="redaction" tone="paper">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-6">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">Safe report sharing</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+            Redact supported infrastructure identifiers before sharing.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted-dark">
+            <span class="font-mono text-text-dark">--redact-sensitive-identifiers</span> is available
+            on scan, plan, compare, rollback plan, and rollback assess in {VERSION}. It covers JSON,
+            Markdown, HTML, terminal output, and derived API Compatibility summaries.
+          </p>
+        </div>
+        <div class="lg:col-span-6">
+          <div class="rounded-[var(--radius-md)] border border-border-dark p-6">
+            <p class="font-editorial text-xl leading-snug text-text-dark">
+              Redaction reduces accidental exposure of supported infrastructure identifiers. Users
+              should still review generated artifacts before external sharing because arbitrary
+              application names, namespaces, labels, annotations, or business data may remain
+              visible.
+            </p>
+            <p class="mt-5 text-sm leading-relaxed text-text-muted-dark">
+              Redaction is applied after evaluation, so findings, severity, readiness score,
+              fingerprints, recommendations, and exit codes do not change merely because display
+              values are redacted.
+            </p>
+            <a
+              href="/security"
+              class="mt-5 inline-flex text-sm text-text-dark underline decoration-border-dark underline-offset-4 transition-colors duration-150 hover:text-signal-dim"
+            >
+              Review security boundaries
+            </a>
+          </div>
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="exit-codes-ci" tone="ink">
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-4">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">Exit codes and CI</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Treat findings separately from tool crashes.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            CI should capture the exit code, preserve generated artifacts, and decide which
+            readiness outcomes block the pipeline. Do not collapse every non-zero result into
+            "the scanner crashed."
+          </p>
+        </div>
+        <div class="lg:col-span-8">
+          <div class="overflow-hidden rounded-[var(--radius-md)] border border-border">
+            <table class="w-full border-collapse text-left text-sm">
+              <tbody>
+                {
+                  exitCodes.map((row, index) => (
+                    <tr class={index < exitCodes.length - 1 ? 'border-b border-border' : ''}>
+                      <td class="w-16 px-4 py-4 align-top font-mono text-text-primary">{row[0]}</td>
+                      <td class="px-4 py-4 align-top text-text-muted">{row[1]}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+          <CodeBlock
+            title="CI exit handling"
+            code={ciCapture}
+            class="mt-6"
+            copyable
+            kind="command"
+            copyLabel="Copy CI exit handling example"
+          />
+        </div>
+      </div>
+    </Container>
+  </Section>
+
+  <Section id="after-scan" tone="ink-raised" border={false}>
+    <Container>
+      <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <span class="font-mono text-xs uppercase tracking-wide text-text-muted">After a scan</span>
+          <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">
+            Turn the report into an operating loop.
+          </h2>
+          <p class="mt-4 leading-relaxed text-text-muted">
+            Review blockers, validate evidence, apply safe remediation, re-scan, compare against
+            the baseline, review remaining warnings, preserve reports with the change record, and
+            run again near the maintenance window.
+          </p>
+        </div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-7">
+          <IconLink href="#upgrade-plan">Plan an upgrade path</IconLink>
+          <IconLink href="#compare">Compare two scans</IconLink>
+          <IconLink href="#rollback-readiness">Assess rollback readiness</IconLink>
+          <IconLink href="#redaction">Prepare shareable reports</IconLink>
+          <IconLink href="/github-action">Automate CI gating</IconLink>
+          <IconLink href={site.issuesUrl} icon="external" external>Open a GitHub issue</IconLink>
+        </div>
+      </div>
+    </Container>
+  </Section>
+</BaseLayout>

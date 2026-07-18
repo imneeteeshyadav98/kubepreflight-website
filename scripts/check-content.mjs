@@ -23,6 +23,7 @@ function check(label, condition) {
 // this refactor exists to prevent).
 const sourceFiles = [
   'src/pages/index.astro',
+  'src/pages/docs.astro',
   'src/pages/install.astro',
   'src/pages/use-cases.astro',
   'src/pages/github-action.astro',
@@ -50,6 +51,25 @@ const codeBlock = readRaw('src/components/ui/CodeBlock.astro');
 check('CodeBlock.astro: rendered @ signs are entity-escaped to avoid Cloudflare rewriting', codeBlock.includes("replace(/@/g, '&#64;')"));
 check('CodeBlock.astro: copy text is stored encoded, not as raw owner/repo@tag HTML', codeBlock.includes('data-copy-text-b64'));
 check('CodeBlock.astro: copy text decodes through TextDecoder', codeBlock.includes('new TextDecoder().decode'));
+
+// --- WEB-004: first-user documentation journey ---
+const docs = read('src/pages/docs.astro');
+for (const phrase of [
+  'First-user KubePreflight journey.',
+  'KubePreflight assesses whether a Kubernetes or Amazon EKS upgrade is ready to proceed',
+  'It does not perform the upgrade or automatically change the cluster',
+  'kubepreflight scan \\\\ --target-version 1.32',
+  '--redact-sensitive-identifiers',
+  'kubepreflight compare \\\\ --baseline previous-findings.json',
+  'kubepreflight rollback plan',
+  'kubepreflight rollback assess',
+  'Infrastructure failure before a trustworthy scan report was produced'
+]) {
+  check(`docs.astro: required journey phrase present: ${phrase}`, docs.includes(phrase));
+}
+check('docs.astro: Docker tag uses derived non-v tag', docs.includes('DOCKER_TAG = site.latestDockerTag'));
+check('docs.astro: GitHub Action ref uses release constant', docs.includes('ACTION_REF = site.latestGitHubActionRef'));
+check('docs.astro: current release does not claim version command support', !/kubepreflight\s+(--version|version)/.test(docs));
 
 // --- Fix #1 / #2: comparison PASS vs upgrade-readiness, strict vs comparison gate ---
 const githubAction = read('src/pages/github-action.astro');
