@@ -24,6 +24,7 @@ function check(label, condition) {
 const sourceFiles = [
   'src/pages/index.astro',
   'src/pages/docs.astro',
+  'src/pages/eks-upgrade-readiness.astro',
   'src/pages/install.astro',
   'src/pages/use-cases.astro',
   'src/pages/github-action.astro',
@@ -70,6 +71,31 @@ for (const phrase of [
 check('docs.astro: Docker tag uses derived non-v tag', docs.includes('DOCKER_TAG = site.latestDockerTag'));
 check('docs.astro: GitHub Action ref uses release constant', docs.includes('ACTION_REF = site.latestGitHubActionRef'));
 check('docs.astro: current release does not claim version command support', !/kubepreflight\s+(--version|version)/.test(docs));
+
+// --- SEO-001A: Amazon EKS upgrade readiness guide ---
+const eksGuide = read('src/pages/eks-upgrade-readiness.astro');
+for (const phrase of [
+  'Amazon EKS Upgrade Readiness Guide',
+  'Assess Kubernetes APIs, admission webhooks, workloads, PodDisruptionBudgets',
+  'Removed and deprecated Kubernetes APIs',
+  'Admission webhook incompatibility',
+  'PDB and eviction constraints',
+  'Managed add-on compatibility',
+  'Rollback readiness is related, but separate',
+  'A clean assessment reduces known upgrade risk',
+  'KubePreflight assesses and explains; it does not perform upgrades, rollbacks',
+  'Does report redaction remove every possible secret?'
+]) {
+  check(`eks-upgrade-readiness.astro: required guide phrase present: ${phrase}`, eksGuide.includes(phrase));
+}
+check(
+  'eks-upgrade-readiness.astro: current release does not claim version command support',
+  !/kubepreflight\s+(--version|version)/.test(eksGuide)
+);
+check(
+  'eks-upgrade-readiness.astro: uses Cloudflare-safe CodeBlock for command example',
+  eksGuide.includes('<CodeBlock') && eksGuide.includes('copyLabel="Copy EKS readiness scan"')
+);
 
 // --- Fix #1 / #2: comparison PASS vs upgrade-readiness, strict vs comparison gate ---
 const githubAction = read('src/pages/github-action.astro');

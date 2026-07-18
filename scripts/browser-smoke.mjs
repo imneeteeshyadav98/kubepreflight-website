@@ -11,6 +11,7 @@ const userDataDir = mkdtempSync(join(tmpdir(), 'kubepreflight-chrome-'));
 const paths = [
   '/',
   '/docs',
+  '/eks-upgrade-readiness',
   '/install',
   '/use-cases',
   '/github-action',
