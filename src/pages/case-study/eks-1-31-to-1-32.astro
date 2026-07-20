@@ -202,6 +202,60 @@ Confidence             high`;
     </Container>
   </Section>
 
+  <Section tone="paper">
+    <Container>
+      <div class="max-w-2xl">
+        <span class="font-mono text-xs uppercase tracking-wide text-text-muted-dark">A different question</span>
+        <h2 class="mt-3 font-editorial text-3xl text-text-dark sm:text-4xl">
+          Does the release itself work, not just the upgrade decision above?
+        </h2>
+        <p class="mt-4 leading-relaxed text-text-muted-dark">
+          The evidence above proves KubePreflight's <em>output</em> is trustworthy on a real cluster.
+          It doesn't prove the <em>released artifact</em> — the exact binary and container someone
+          downloads — behaves the same way. That's a separate check, run for every v1 release
+          candidate: SEC-TRUST-002.
+        </p>
+      </div>
+
+      <div class="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2">
+        <div class="border-t border-border-dark pt-6">
+          <h3 class="text-base font-medium text-text-dark">What SEC-TRUST-002 checks</h3>
+          <p class="mt-2 text-sm leading-relaxed text-text-muted-dark">
+            The released binary and a digest-pinned GHCR container — not a local rebuild — running{' '}
+            <span class="font-mono text-text-dark">scan</span>,{' '}
+            <span class="font-mono text-text-dark">plan</span>,{' '}
+            <span class="font-mono text-text-dark">compare</span>, and{' '}
+            <span class="font-mono text-text-dark">rollback assess</span> against a real, disposable
+            EKS cluster. Binary and container are required to agree on version, commit, verdict, and
+            every finding. Every command run is checked against a static allowlist — no mutating
+            command is ever executed against the cluster, not just by intent.
+          </p>
+        </div>
+        <div class="border-t border-border-dark pt-6">
+          <h3 class="text-base font-medium text-text-dark">What it found</h3>
+          <p class="mt-2 text-sm leading-relaxed text-text-muted-dark">
+            On its first real run, against{' '}
+            <span class="font-mono text-text-dark">{site.secTrust002BugFoundVersion}</span>, it found
+            a real bug: <span class="font-mono text-text-dark">rollback plan</span>/
+            <span class="font-mono text-text-dark">rollback assess</span> failed writing their own
+            output file — a defect unit tests had missed entirely, because it only reproduces against
+            a real filesystem and a real cluster. Fixed, re-verified clean against{' '}
+            <span class="font-mono text-text-dark">{site.secTrust002VerifiedCleanVersion}</span>, with
+            sensitive-identifier redaction confirmed clean throughout.
+          </p>
+        </div>
+      </div>
+
+      <p class="mt-10 max-w-2xl border-t border-border-dark pt-6 text-sm leading-relaxed text-text-muted-dark">
+        <span class="font-mono text-text-dark">{site.verifiedEKSReleaseVersion}</span> ships the exact
+        product code that passed that clean{' '}
+        <span class="font-mono text-text-dark">{site.secTrust002VerifiedCleanVersion}</span> run —
+        everything after it was Console accessibility work and documentation, not scan, plan, compare,
+        or rollback logic. The live-EKS proof carries forward unchanged.
+      </p>
+    </Container>
+  </Section>
+
   <Section tone="ink" border={false}>
     <Container>
       <div class="flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
