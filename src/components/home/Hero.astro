@@ -9,7 +9,7 @@ import { site } from '../../content/site';
 <div class="border-b border-border">
   <Container class="grid grid-cols-1 gap-16 py-24 md:grid-cols-12 md:py-32">
     <div class="md:col-span-8">
-      <Badge tone="signal">{site.verifiedEKSReleaseVersion} &middot; verified against real EKS upgrades</Badge>
+      <Badge tone="signal">KubePreflight {site.verifiedEKSReleaseVersion} &middot; verified against real EKS upgrades</Badge>
 
       <h1 class="mt-6 font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl lg:text-[3.5rem]">
         Upgrade Kubernetes<br />with evidence, not assumptions.
@@ -17,6 +17,10 @@ import { site } from '../../content/site';
 
       <p class="mt-6 max-w-xl text-lg leading-relaxed text-text-muted">
         {site.description}
+      </p>
+
+      <p class="mt-4 max-w-xl text-sm font-medium text-text-primary">
+        Read-only — never upgrades or rolls back your cluster.
       </p>
 
       <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
