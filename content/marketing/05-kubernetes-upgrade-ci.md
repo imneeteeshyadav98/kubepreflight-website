@@ -6,16 +6,16 @@ targetGuide: "https://kubepreflight.com/kubernetes-upgrade-ci-guide/"
 docsLink: "https://kubepreflight.com/docs/"
 ctaLink: "https://github.com/imneeteeshyadav98/kubepreflight"
 githubLink: "https://github.com/imneeteeshyadav98/kubepreflight"
-dockerImagePinnedTo: "ghcr.io/imneeteeshyadav98/kubepreflight:0.15.0-redaction"
+dockerImagePinnedTo: "ghcr.io/imneeteeshyadav98/kubepreflight:1.1.0"
 status: "publish-ready"
 ---
 
 ## Short social version
 
-Catching a removed API or a new upgrade blocker in a pull request is cheaper than catching it
-during the maintenance window. There's a first-party GitHub Action for GitHub Actions -- for GitLab
-CI, Jenkins, or anything else, it's five documented exit codes and an ordinary Docker pipeline
-step. No plugin required.
+Catching a removed API or a new worker-rollout blocker in a pull request is cheaper than catching
+it during the maintenance window. There's a first-party GitHub Action for GitHub Actions -- for
+GitLab CI, Jenkins, or anything else, it's five documented exit codes and an ordinary Docker
+pipeline step. No plugin required.
 
 ## Long social version
 
@@ -58,16 +58,21 @@ repository is clean today.
 repository that already carries pre-existing findings you can't fix in a single pull request --
 otherwise the first gated PR has to fix everything at once just to pass.
 
+Set the intended upgrade context explicitly. In v1.1.0, leaving the default `unspecified` can turn
+some contextual findings into operator decisions, while `worker-rollout` or `full-platform-upgrade`
+may correctly block the same evidence.
+
 ## Four pipelines, one exit code
 
 **Any CI: shell script.**
 
 ```bash
 set +e
-docker run --rm -v "$PWD:/work" -w /work ghcr.io/imneeteeshyadav98/kubepreflight:0.15.0-redaction scan \
+docker run --rm -v "$PWD:/work" -w /work ghcr.io/imneeteeshyadav98/kubepreflight:1.1.0 scan \
   --manifests-only \
   --manifests ./deploy \
   --target-version 1.32 \
+  --upgrade-context worker-rollout \
   --output all \
   --output-dir ./kubepreflight-report
 status=$?
@@ -90,10 +95,10 @@ binary directly instead of through it:
 kubepreflight-scan:
   stage: test
   image:
-    name: ghcr.io/imneeteeshyadav98/kubepreflight:0.15.0-redaction
+    name: ghcr.io/imneeteeshyadav98/kubepreflight:1.1.0
     entrypoint: [""]
   script:
-    - /usr/local/bin/kubepreflight scan --manifests-only --manifests ./deploy --target-version 1.32 --output all
+    - /usr/local/bin/kubepreflight scan --manifests-only --manifests ./deploy --target-version 1.32 --upgrade-context worker-rollout --output all
   artifacts:
     when: always
     paths:
@@ -108,8 +113,8 @@ stage('KubePreflight scan') {
   steps {
     sh '''
       set +e
-      docker run --rm -v "$PWD:/work" -w /work ghcr.io/imneeteeshyadav98/kubepreflight:0.15.0-redaction scan \
-        --manifests-only --manifests ./deploy --target-version 1.32 --output all
+      docker run --rm -v "$PWD:/work" -w /work ghcr.io/imneeteeshyadav98/kubepreflight:1.1.0 scan \
+        --manifests-only --manifests ./deploy --target-version 1.32 --upgrade-context worker-rollout --output all
       status=$?
       set -e
       if [ "$status" -eq 2 ] || [ "$status" -ge 3 ]; then

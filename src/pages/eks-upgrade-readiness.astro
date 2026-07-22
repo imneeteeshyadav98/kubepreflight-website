@@ -12,6 +12,7 @@ const eksScan = `kubepreflight scan \\
   --provider eks \\
   --cluster-name my-cluster \\
   --target-version 1.32 \\
+  --upgrade-context full-platform-upgrade \\
   --redact-sensitive-identifiers \\
   --output all`;
 
@@ -92,7 +93,10 @@ const workflow = [
 ];
 
 const resultTerms = [
-  ['Blocker', 'A finding that should stop the upgrade plan until fixed or explicitly accepted.'],
+  ['Block', 'The selected upgrade operation should not proceed.'],
+  ['Operator decision', 'Risk exists, but KubePreflight needs operator context or validation before it can be treated as allowed or blocked.'],
+  ['Allow', 'The finding remains visible but does not block the selected operation.'],
+  ['Blocker', 'A finding that blocks when its confirmed impact applies to the selected upgrade context. Universal compatibility failures remain blockers across contexts.'],
   ['Warning', 'A risk or advisory that should stay visible in the change review.'],
   ['Info', 'Context or inventory that does not gate the exit code by itself.'],
   ['Readiness score', 'A summary signal for comparing scan posture over time, not a guarantee.'],
@@ -305,6 +309,12 @@ const structuredData = [
             This command uses the current kubeconfig plus read-only AWS/EKS access available to the
             process. It requests all report formats and redacts supported sensitive infrastructure
             identifiers before the artifacts are shared.
+          </p>
+          <p class="mt-4 text-sm leading-relaxed text-text-muted">
+            The example uses <span class="font-mono text-text-primary">full-platform-upgrade</span>
+            because EKS maintenance often includes control-plane, worker, and add-on work. Use{' '}
+            <span class="font-mono text-text-primary">control-plane-only</span> when workers will not
+            be drained.
           </p>
           <p class="mt-4 text-sm leading-relaxed text-text-muted">
             The scan writes <span class="font-mono text-text-primary">findings.json</span> and, with{' '}

@@ -17,6 +17,7 @@ steps:
   - uses: ${site.repositoryOwner}/${site.repositoryName}@${VERSION}
     with:
       target-version: '1.36'
+      upgrade-context: worker-rollout
       manifests: './deploy'
       manifests-only: 'true'`;
 
@@ -40,6 +41,7 @@ jobs:
         id: baseline
         with:
           target-version: '1.36'
+          upgrade-context: worker-rollout
           manifests: './base/deploy'
           manifests-only: 'true'
           findings-out: 'baseline-findings.json'
@@ -53,6 +55,7 @@ jobs:
         id: current
         with:
           target-version: '1.36'
+          upgrade-context: worker-rollout
           manifests: './head/deploy'
           manifests-only: 'true'
           findings-out: 'current-findings.json'
@@ -136,6 +139,10 @@ reasons                (empty — nothing regressed)`;
           the pull request. If your environment carries known, accepted findings, use the comparison
           gate below instead — it fails only when a pull request makes readiness worse, not on
           pre-existing problems.
+        </p>
+        <p class="mt-4 text-sm leading-relaxed text-amber">
+          CI users should set <span class="font-mono">upgrade-context</span> explicitly. Without it,
+          contextual findings may require an operator decision instead of becoming global blockers.
         </p>
       </div>
       <CodeBlock

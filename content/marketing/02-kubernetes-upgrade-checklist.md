@@ -24,8 +24,8 @@ Neither answers the actual operational question a platform team has the week bef
 window: what, specifically, do we check, in what order, and what do we do with the result? This
 post breaks the checklist into seven concrete areas -- preparation, API compatibility, admission
 webhooks, workloads and disruption, nodes and capacity, add-ons and controllers, and cluster health
--- plus a four-outcome result table (blocker, warning, info, incomplete evidence) so "I ran the
-checklist" turns into an actual decision, not just a checked box.
+-- plus a context-aware gate table (block, operator decision, allow, warning, info, incomplete
+evidence) so "I ran the checklist" turns into an actual decision, not just a checked box.
 
 ---
 
@@ -84,10 +84,15 @@ Every check in the seven areas above resolves to one of four results:
 
 | Result | Meaning | Action |
 | --- | --- | --- |
-| Blocker | Upgrade should not proceed | Resolve and re-scan |
+| Block | The selected upgrade operation should not proceed | Resolve and re-scan |
+| Operator decision | Risk exists, but operator context or validation is required | Review and document |
+| Allow | Finding remains visible but does not block the selected operation | Track if relevant |
 | Warning | Upgrade may proceed with risk | Review and document |
 | Info | Advisory context | Track if relevant |
 | Incomplete evidence | Readiness is not fully known | Restore evidence coverage |
+
+In KubePreflight v1.1.0, contextual findings block only when their confirmed impact applies to the
+selected upgrade context. Universal compatibility failures remain blockers across contexts.
 
 That last row matters more than it looks. Incomplete evidence -- a Kubernetes, AWS, or manifest
 plane that couldn't be fully collected -- is not the same as a clean result, and treating it as one
@@ -101,6 +106,7 @@ of a maintenance window. A single scan against your manifests or live cluster co
 ```bash
 kubepreflight scan \
   --target-version 1.32 \
+  --upgrade-context worker-rollout \
   --output all
 ```
 

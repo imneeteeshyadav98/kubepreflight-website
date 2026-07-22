@@ -50,18 +50,22 @@ const manifestScan = `# No cluster, no kubeconfig — reads YAML only
 $ kubepreflight scan \\
   --manifests-only \\
   --manifests ./k8s \\
-  --target-version 1.36`;
+  --target-version 1.36 \\
+  --upgrade-context worker-rollout`;
 
 const liveScan = `# Requires a working kubeconfig + read-only RBAC (see below)
 $ kubectl config current-context
-$ kubepreflight scan --target-version 1.36`;
+$ kubepreflight scan \\
+  --target-version 1.36 \\
+  --upgrade-context control-plane-only`;
 
 const eksScan = `# Requires kubeconfig + RBAC, plus read-only AWS IAM
 $ aws eks update-kubeconfig --name production-eks --region ap-south-1
 $ AWS_REGION=ap-south-1 kubepreflight scan \\
   --provider eks \\
   --cluster-name production-eks \\
-  --target-version 1.36`;
+  --target-version 1.36 \\
+  --upgrade-context full-platform-upgrade`;
 
 const trustBoundary = [
   {
@@ -295,6 +299,12 @@ const providerSupport = [
       <div class="max-w-2xl">
         <span class="font-mono text-xs uppercase tracking-wide text-text-muted">First scan</span>
         <h2 class="mt-3 font-editorial text-3xl text-text-primary sm:text-4xl">Start with the one that needs nothing.</h2>
+        <p class="mt-4 leading-relaxed text-text-muted">
+          Pick the intended operation with <span class="font-mono text-text-primary">--upgrade-context</span>.
+          Use <span class="font-mono text-text-primary">control-plane-only</span> when workers will not be drained,
+          <span class="font-mono text-text-primary"> worker-rollout</span> when pods may be evicted, and{' '}
+          <span class="font-mono text-text-primary">audit-only</span> for review-only assessments.
+        </p>
       </div>
 
       <div class="mt-10 flex flex-col gap-6">

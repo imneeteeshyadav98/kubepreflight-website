@@ -24,6 +24,7 @@ docker run --rm -v "$PWD:/work" -w /work ${dockerImage} scan \\
   --manifests-only \\
   --manifests ./deploy \\
   --target-version 1.32 \\
+  --upgrade-context worker-rollout \\
   --output all \\
   --output-dir ./kubepreflight-report
 status=$?
@@ -44,7 +45,7 @@ const gitlabCi = `kubepreflight-scan:
     name: ${dockerImage}
     entrypoint: [""]
   script:
-    - /usr/local/bin/kubepreflight scan --manifests-only --manifests ./deploy --target-version 1.32 --output all
+    - /usr/local/bin/kubepreflight scan --manifests-only --manifests ./deploy --target-version 1.32 --upgrade-context worker-rollout --output all
   artifacts:
     when: always
     paths:
@@ -56,7 +57,7 @@ const jenkinsfile = `stage('KubePreflight scan') {
     sh '''
       set +e
       docker run --rm -v "$PWD:/work" -w /work ${dockerImage} scan \\
-        --manifests-only --manifests ./deploy --target-version 1.32 --output all
+        --manifests-only --manifests ./deploy --target-version 1.32 --upgrade-context worker-rollout --output all
       status=$?
       set -e
       if [ "$status" -eq 2 ] || [ "$status" -ge 3 ]; then
@@ -190,6 +191,11 @@ const structuredData = [
         <p class="mt-4 leading-relaxed text-text-muted">
           Both approaches use the same scan and the same exit codes -- the difference is what
           counts as a failure.
+        </p>
+        <p class="mt-4 text-sm leading-relaxed text-amber">
+          Set <span class="font-mono">--upgrade-context</span> in CI. Pipelines that leave the
+          default <span class="font-mono">unspecified</span> may receive operator-decision findings
+          where a worker rollout or full-platform upgrade would produce blockers.
         </p>
       </div>
 

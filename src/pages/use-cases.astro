@@ -11,10 +11,10 @@ const useCases = [
   {
     label: 'Upgrade planning',
     title: 'Kubernetes upgrade planning',
-    problem: 'A platform team needs to know whether workloads, APIs, webhooks, add-ons, nodes, and disruption budgets are ready before scheduling a control-plane upgrade.',
+    problem: 'A platform team needs to know whether workloads, APIs, webhooks, add-ons, nodes, and disruption budgets are ready before scheduling a control-plane upgrade, worker rollout, or full-platform upgrade.',
     evidence: 'Live-cluster inventory, manifest compatibility checks, deprecated API usage, PodDisruptionBudget coverage, webhook backend health, CoreDNS and EKS add-on status, and node compatibility signals.',
-    decision: 'KubePreflight returns a readiness verdict, blocker/warning counts, and a scored report that separates upgrade-stopping issues from follow-up work.',
-    action: 'Fix blockers first, keep warnings visible in the change plan, attach the report to the upgrade ticket, and rerun before the maintenance window.'
+    decision: 'KubePreflight returns a readiness verdict, blocker/warning counts, and a scored report that separates findings that block the selected operation from follow-up work.',
+    action: 'Select the intended upgrade context, fix blockers first, keep warnings visible in the change plan, attach the report to the upgrade ticket, and rerun before the maintenance window.'
   },
   {
     label: 'Rollback support',
@@ -27,7 +27,7 @@ const useCases = [
   {
     label: 'CI gate',
     title: 'CI regression gating',
-    problem: 'A pull request can introduce a new upgrade blocker even when the cluster already has known warnings or legacy debt.',
+    problem: 'A pull request can introduce a new blocker for a worker rollout even when the same evidence would be advisory for a control-plane-only upgrade.',
     evidence: 'Baseline and current `findings.json` artifacts, new and resolved findings, verdict movement, readiness-score delta, and inline annotations for newly introduced blockers.',
     decision: 'KubePreflight can fail the PR only when the change makes readiness worse, instead of failing every PR because the baseline was imperfect.',
     action: 'Run manifest-only scans on base and head refs, compare the outputs, and require the author to remove new blockers before merge.'
@@ -37,8 +37,8 @@ const useCases = [
     title: 'Manifest compatibility scanning',
     problem: 'Application teams often need feedback before they have cluster credentials or before a manifest change reaches a shared environment.',
     evidence: 'YAML manifests, Helm-rendered output, deprecated API versions, removal targets, and source-file locations for findings that came from scanned manifests.',
-    decision: 'KubePreflight reports whether the submitted manifests contain upgrade blockers for the target Kubernetes version.',
-    action: 'Run `kubepreflight scan --manifests-only` locally or in CI, fix incompatible APIs before review, and attach the machine-readable report when exceptions are needed.'
+    decision: 'KubePreflight reports whether the submitted manifests contain blockers for the selected target version and upgrade context.',
+    action: 'Run `kubepreflight scan --manifests-only --upgrade-context worker-rollout` locally or in CI, fix incompatible APIs before review, and attach the machine-readable report when exceptions are needed.'
   },
   {
     label: 'Change review',
@@ -145,6 +145,11 @@ const structuredData = {
             KubePreflight evaluates what it can observe: manifests, Kubernetes API state, and
             provider evidence when configured. It cannot know every runtime dependency, traffic
             pattern, business deadline, or organization-specific risk tolerance.
+          </p>
+          <p class="mt-5 leading-relaxed text-text-muted-dark">
+            In {site.latestReleaseVersion}, contextual findings block only when their confirmed
+            impact applies to the selected operation. Universal compatibility failures still block
+            across contexts.
           </p>
         </div>
         <div class="md:col-span-5">
