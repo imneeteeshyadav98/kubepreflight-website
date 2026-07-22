@@ -11,6 +11,9 @@ import { site } from '../content/site';
 const VERSION = site.latestReleaseVersion;
 const DOCKER_TAG = site.latestDockerTag;
 const ACTION_REF = site.latestGitHubActionRef;
+const contextDemoVideo = `/media/kubepreflight-${VERSION}-context-aware-gating.mp4`;
+const contextDemoPoster = `/media/kubepreflight-${VERSION}-context-aware-gating-poster.png`;
+const contextDemoCaptions = `/media/kubepreflight-${VERSION}-context-aware-gating.vtt`;
 
 const journey = [
   { label: 'Install', href: '#install', detail: 'Binary, Docker, checksums, and release pinning.' },
@@ -447,6 +450,37 @@ const structuredData = {
           <CodeBlock title="PDB context example" code={pdbBeforeAfter} kind="output" />
         </div>
       </div>
+
+      <figure class="mt-10">
+        <div class="aspect-video overflow-hidden rounded-[var(--radius-md)] border border-border bg-ink-900">
+          <video
+            class="h-full w-full"
+            controls
+            playsinline
+            preload="metadata"
+            poster={contextDemoPoster}
+            aria-label={`KubePreflight ${VERSION} context-aware upgrade gating demo`}
+          >
+            <source
+              src={contextDemoVideo}
+              type="video/mp4"
+            />
+            <track
+              kind="captions"
+              src={contextDemoCaptions}
+              srclang="en"
+              label="English"
+              default
+            />
+            Your browser does not support the video tag. Download the demo from
+            {contextDemoVideo}.
+          </video>
+        </div>
+        <figcaption class="mt-3 text-sm leading-relaxed text-text-muted">
+          Evidence-backed demo: the same PDB finding is allowed for a control-plane-only
+          upgrade and blocks a worker rollout that requires pod eviction.
+        </figcaption>
+      </figure>
     </Container>
   </Section>
 
