@@ -47,9 +47,9 @@ for (const file of sourceFiles) {
 }
 
 const siteConfig = readRaw('src/content/site.ts');
-check('site.ts: latest release fallback is v1.0.0', siteConfig.includes("'v1.0.0'"));
-check('site.ts: v1.0.0 supports redaction', siteConfig.includes('supportsRedaction: true'));
-check('site.ts: v1.0.0 claims version command support', siteConfig.includes('supportsVersionCommand: true'));
+check('site.ts: latest release fallback is v1.1.0', siteConfig.includes("'v1.1.0'"));
+check('site.ts: v1.1.0 supports redaction', siteConfig.includes('supportsRedaction: true'));
+check('site.ts: v1.1.0 claims version command support', siteConfig.includes('supportsVersionCommand: true'));
 check('site.ts: Docker tag is derived without leading v', siteConfig.includes("latestReleaseVersion.replace(/^v/, '')"));
 
 const codeBlock = readRaw('src/components/ui/CodeBlock.astro');
@@ -112,7 +112,7 @@ for (const phrase of [
   'Nodes and capacity',
   'Add-ons and controllers',
   'Cluster health',
-  'Upgrade should not proceed',
+  'The selected upgrade operation should not proceed',
   'It does not perform upgrades, apply remediations, or mutate cluster resources'
 ]) {
   check(`kubernetes-upgrade-checklist.astro: required phrase present: ${phrase}`, upgradeChecklist.includes(phrase));

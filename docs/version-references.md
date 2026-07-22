@@ -2,8 +2,8 @@
 
 `src/content/site.ts` exposes three separate version constants. They are not
 interchangeable. The latest public release is currently
-`v0.15.0-redaction`, while the real-EKS validation and published case-study
-evidence remain pinned to `v0.14.0`.
+`v1.1.0`, while the latest real-EKS validation remains pinned to `v1.0.0`
+and the published case-study evidence remains pinned to `v0.14.0`.
 
 | Constant | What it means | Where it's used | How it changes |
 |---|---|---|---|
@@ -39,8 +39,8 @@ impossible to introduce by accident.
 
 ## Current release feature flags
 
-`site.releaseFeatures.supportsRedaction` is `true` for
-`v0.15.0-redaction`, the first public release with native sensitive
-identifier redaction. `site.releaseFeatures.supportsVersionCommand` is
-currently `false`: version/provenance commands exist on the development
-branch, but are not available in the `v0.15.0-redaction` binary.
+`site.releaseFeatures.supportsRedaction` is `true` for current releases.
+`site.releaseFeatures.supportsVersionCommand` is `true` for `v1.1.0`.
+The current release also supports context-aware upgrade gating with
+`--upgrade-context`; the real-EKS validation constant should still move only
+after a fresh real-EKS validation, not merely because a new release shipped.

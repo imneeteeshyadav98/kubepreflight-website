@@ -11,22 +11,24 @@
 //   case-study evidence. Permanently pinned to that evidence capture; never
 //   rewrite it just to match the other two constants.
 //
-// v1.0.0 is the current public release, and also the latest real-EKS
-// validation: SEC-TRUST-002 ran scan/plan/compare/rollback assessment for
-// the released binary and digest-pinned container against a real disposable
-// EKS cluster. The artifacts actually exercised live were tagged
-// v1.0.0-rc.1 (which that run caught a real rollback bug in) and
+// v1.1.0 is the current public release. v1.0.0 remains the latest release
+// with real-EKS validation: SEC-TRUST-002 ran scan/plan/compare/rollback
+// assessment for the released binary and digest-pinned container against a
+// real disposable EKS cluster. The artifacts actually exercised live were
+// tagged v1.0.0-rc.1 (which that run caught a real rollback bug in) and
 // v1.0.0-rc.2 (clean); v1.0.0 ships that exact product code unchanged --
-// see /case-study/eks-1-31-to-1-32 for how the two relate. v0.14.0 remains
-// pinned as the EKS 1.31 -> 1.32 case-study evidence release specifically;
-// it is a separate, earlier fact from the SEC-TRUST-002 validation above
-// and must not be conflated with it.
+// see /case-study/eks-1-31-to-1-32 for how the two relate. v1.1.0 adds
+// context-aware upgrade gating and was release-locked with isolated Kind,
+// published-artifact, and GHCR verification. v0.14.0 remains pinned as the
+// EKS 1.31 -> 1.32 case-study evidence release specifically; it is a
+// separate, earlier fact from SEC-TRUST-002 and must not be conflated with
+// either v1.0.0 or v1.1.0.
 
 // Tracks new releases. Set via PUBLIC_KUBEPREFLIGHT_VERSION (see
 // .env.example) so a future release only needs an env var change +
 // redeploy — never a source edit. Falls back to the last release wired in
 // here if the env var isn't set, so local dev and CI never break silently.
-const latestReleaseVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v1.0.0';
+const latestReleaseVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v1.1.0';
 
 // Fixed historical facts, deliberately NOT env-driven — see comment above.
 const verifiedEKSReleaseVersion = 'v1.0.0';
