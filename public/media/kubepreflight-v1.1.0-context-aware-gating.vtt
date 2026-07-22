@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:06.000
+A valid Kubernetes risk is not always an upgrade blocker. The impact depends on the operation you are planning.
+
+00:00:06.000 --> 00:00:18.000
+Control-plane-only: PDB-001 is Warning/P3, gate allow, blockers zero. No worker drain is planned.
+
+00:00:18.000 --> 00:00:30.000
+Worker rollout: PDB-001 is Blocker/P3, gate block, blockers one. Pod eviction may block the rollout.
+
+00:00:30.000 --> 00:00:39.000
+KubePreflight supports audit-only, control-plane-only, worker-rollout, full-platform-upgrade, workload-restart, and unspecified contexts.
+
+00:00:39.000 --> 00:00:47.000
+Block means the selected operation should not proceed. Operator decision needs context. Allow keeps the finding visible without blocking.
+
+00:00:47.000 --> 00:00:54.000
+Same evidence. Correct decision for the planned operation. KubePreflight v1.1.0 context-aware Kubernetes upgrade gating.
