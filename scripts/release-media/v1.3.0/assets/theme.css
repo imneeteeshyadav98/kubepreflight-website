@@ -1,0 +1,167 @@
+@import url("fonts.css");
+
+/* Same design tokens as demo/v1-launch/assets/theme.css in the core repo
+   (v1.0.0 launch pipeline) -- reused deliberately to keep KubePreflight's
+   release media visually consistent across versions. Canvas is 1080x1080
+   (native square) instead of 1920x1080, since this recording is captured
+   square from the start rather than cropped after the fact. */
+:root {
+  --ink: #0a1211;
+  --ink-2: #101817;
+  --ink-3: #16201f;
+  --paper: #f3f6f5;
+  --text: #eaf2ef;
+  --text-muted: #9bb0ab;
+  --accent: #3fd9ce;
+  --blocker: #f0796d;
+  --warning: #e5a64b;
+  --info: #7fa9d6;
+  --pass: #5fcb88;
+  --border: #23302e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 1080px;
+  height: 1080px;
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--text);
+  font-family: "Plex Sans", ui-sans-serif, sans-serif;
+}
+
+.scene {
+  width: 1080px;
+  height: 1080px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+
+.scene.fade-out {
+  opacity: 0;
+}
+
+.mono {
+  font-family: "Plex Mono", ui-monospace, monospace;
+}
+
+.eyebrow {
+  font-family: "Plex Mono", ui-monospace, monospace;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: "Plex Mono", ui-monospace, monospace;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  padding: 6px 13px;
+  border-radius: 100px;
+  border: 1px solid;
+}
+
+.badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.badge.blocker {
+  color: var(--blocker);
+  border-color: color-mix(in srgb, var(--blocker) 45%, transparent);
+  background: color-mix(in srgb, var(--blocker) 12%, transparent);
+}
+.badge.blocker::before {
+  background: var(--blocker);
+}
+
+.badge.warning {
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 45%, transparent);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+}
+.badge.warning::before {
+  background: var(--warning);
+}
+
+.badge.pass {
+  color: var(--pass);
+  border-color: color-mix(in srgb, var(--pass) 45%, transparent);
+  background: color-mix(in srgb, var(--pass) 12%, transparent);
+}
+.badge.pass::before {
+  background: var(--pass);
+}
+
+.badge.accent {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.badge.accent::before {
+  background: var(--accent);
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--ink-2);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+.panel.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 9px 0;
+  border-top: 1px solid var(--border);
+  font-family: "Plex Mono", ui-monospace, monospace;
+  font-size: 16px;
+}
+.kv:first-of-type {
+  border-top: none;
+}
+.kv .k {
+  color: var(--text-muted);
+}
+.kv .v {
+  color: var(--text);
+  font-weight: 600;
+  text-align: right;
+}
+.kv .v.pass {
+  color: var(--pass);
+}
+.kv .v.blocker {
+  color: var(--blocker);
+}
+.kv .v.warning {
+  color: var(--warning);
+}
+.kv .v.accent {
+  color: var(--accent);
+}

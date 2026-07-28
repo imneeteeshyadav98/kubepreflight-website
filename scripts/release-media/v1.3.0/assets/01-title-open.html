@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="theme.css" />
+<style>
+  .scene { background: radial-gradient(ellipse at 50% 30%, #101c1a 0%, #0a1211 70%); }
+  .mark { display: flex; align-items: center; gap: 16px; margin-bottom: 34px; }
+  .mark .box {
+    width: 46px; height: 46px; border: 3px solid var(--accent); border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mark .box svg { width: 22px; height: 22px; }
+  .mark .name { font-family: "Plex Sans"; font-weight: 600; font-size: 28px; letter-spacing: -0.01em; }
+  .mark .name b { color: var(--accent); }
+  h1 {
+    font-family: "Plex Sans"; font-weight: 600; font-size: 22px; margin: 0 0 20px;
+    color: var(--text-muted); letter-spacing: 0.01em;
+  }
+  .subtitle {
+    font-family: "Plex Sans"; font-weight: 600; font-size: 34px; line-height: 1.25;
+    text-align: center; color: var(--text); margin: 0 0 26px; max-width: 780px;
+  }
+  .subtitle .accent { color: var(--accent); }
+  .support {
+    font-family: "Plex Mono", ui-monospace, monospace; font-size: 17px;
+    color: var(--text-muted); letter-spacing: 0.01em;
+  }
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="mark">
+    <div class="box"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12L10 18L20 6" stroke="#3fd9ce" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="name">Kube<b>Preflight</b></div>
+  </div>
+  <h1>v1.3.0</h1>
+  <div class="subtitle">Evidence Integrity<br /><span class="accent">&amp; Evaluation Semantics</span></div>
+  <div class="support">Know what was actually evaluated.</div>
+</div>
+<script>
+  window.sceneReady = true;
+  window.fadeOut = () => document.getElementById('scene').classList.add('fade-out');
+</script>
+</body>
+</html>
