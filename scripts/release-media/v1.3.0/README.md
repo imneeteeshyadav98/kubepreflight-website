@@ -117,14 +117,35 @@ automatically; no component change is needed when the media lands.
 
 | File | Resolution | Codec | Duration/content | FPS | Size |
 |---|---|---|---|---|---|
-| `kubepreflight-v1.3.0-evaluation-coverage.mp4` | 1080x1080 | H.264, yuv420p, faststart, no audio | full 17.04s | 25 | 342 KB |
-| `kubepreflight-v1.3.0-evaluation-coverage-poster.png` | 1080x1080 | — | still, t=6.0s (the `not_re_evaluated` comparison summary) | — | 110 KB |
-| `kubepreflight-v1.3.0-evaluation-coverage.gif` | 1080x1080 | palette-optimized | highlight cut, 2.0s–10.4s (the problem → `not_re_evaluated` → honest coverage) | 12 | 1013 KB |
-| `kubepreflight-v1.3.0-evaluation-coverage-preview.gif` | 720x720 | palette-optimized | same 2.0s–10.4s cut | 10 | 550 KB |
+| `kubepreflight-v1.3.0-evaluation-coverage.mp4` | 1080x1080 | H.264, yuv420p, faststart, no audio | full 17.08s | 25 | 647 KB |
+| `kubepreflight-v1.3.0-evaluation-coverage-poster.png` | 1080x1080 | — | still, t=6.8s (the `not_re_evaluated` comparison summary, fully settled) | — | 187 KB |
+| `kubepreflight-v1.3.0-evaluation-coverage.gif` | 1080x1080 | palette-optimized | highlight cut, 2.0s–10.4s (the problem → `not_re_evaluated` → honest coverage) | 12 | 1.95 MB |
+| `kubepreflight-v1.3.0-evaluation-coverage-preview.gif` | 720x720 | palette-optimized | same 2.0s–10.4s cut | 10 | 909 KB |
 
 `verify.sh` checks all of the above plus a faststart (`moov` before
 `mdat`) byte-offset check on the MP4, so a player can begin playback
 before the full file downloads.
+
+## Scale correction (post-launch fix)
+
+The first published version of this animation (composed at the same
+1080x1080 canvas but with scene content sized closer to
+`demo/v1-launch`'s 1920x1080-native proportions, only lightly adjusted)
+looked fine reviewed as full-frame native screenshots, but read as a
+small, hard-to-read screenshot floating in a large dark square once
+actually embedded in the website's release card at real display size —
+caught in production visual review on kubepreflight.com, not before
+ship. Root cause: content block widths (~55-60% of the 1080px canvas) and
+font sizes were sized for a canvas roughly 1.8x wider, so at the actual
+1080x1080 square they left far too much empty margin on every side.
+Fixed by widening every scene's content block to ~83-85% of the canvas
+width and scaling `theme.css`'s shared tokens and each scene's heading/
+support text up by roughly 1.7-2x, then validated at the sizes that
+actually matter — temporary 450x450 and 320x320 downscaled frame
+previews (not just native 1080x1080) — before re-shipping. The lesson:
+inspecting frames at native recording resolution is not sufficient to
+catch a small-content defect; validate at the actual display size the
+media will render at.
 
 The GIF is deliberately a trimmed cut, not the full 17.1s — same
 precedent as `demo/v1-launch/render.sh`'s GIF (a 13s cut of its 30s
@@ -147,7 +168,7 @@ present, no comment/title metadata was set).
 
 ## Known limitation: poster frame timing
 
-The poster is extracted at t=6.0s, inside the "not_re_evaluated" scene
+The poster is extracted at t=6.8s, inside the "not_re_evaluated" scene
 window (4.4s–7.2s), specifically chosen to land on the comparison summary
 with the highlighted `Not re-evaluated: 8` row and the literal
 `not_re_evaluated` wire-field label both visible and settled (post

@@ -4,14 +4,14 @@
 <meta charset="utf-8" />
 <link rel="stylesheet" href="theme.css" />
 <style>
-  .scene { background: var(--ink); align-items: center; padding: 80px 90px; }
-  .head { text-align: center; margin-bottom: 32px; }
-  .head h1 { font-family: "Plex Sans"; font-weight: 600; font-size: 34px; margin: 14px 0 0; letter-spacing: -0.01em; }
-  .panel { width: 560px; padding: 28px 32px; }
-  .kv .v.pass { display: inline-flex; align-items: center; gap: 8px; }
-  .kv .v.pass::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--pass); }
+  .scene { background: var(--ink); align-items: center; padding: 50px 60px; }
+  .head { text-align: center; margin-bottom: 46px; }
+  .head h1 { font-family: "Plex Sans"; font-weight: 700; font-size: 60px; margin: 20px 0 0; letter-spacing: -0.01em; }
+  .panel { width: 900px; padding: 40px 44px; }
+  .kv .v.pass { display: inline-flex; align-items: center; gap: 12px; }
+  .kv .v.pass::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--pass); }
   .footer {
-    margin-top: 24px; text-align: center; font-family: "Plex Mono"; font-size: 14px;
+    margin-top: 36px; text-align: center; font-family: "Plex Mono"; font-size: 22px;
     color: var(--text-muted); line-height: 1.7;
     opacity: 0; transition: opacity 280ms ease;
   }
@@ -30,7 +30,7 @@
     <div class="kv"><span class="k">Manifests-only</span><span class="v pass">PASS</span></div>
     <div class="kv"><span class="k">Comparison proof</span><span class="v pass">PASS</span></div>
   </div>
-  <div class="footer" id="footer">Disposable infrastructure<br />Fully cleaned up after testing</div>
+  <div class="footer" id="footer">Disposable infrastructure &middot; Fully cleaned up after testing</div>
 </div>
 <script>
   window.sceneReady = false;

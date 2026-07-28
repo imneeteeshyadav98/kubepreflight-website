@@ -4,16 +4,16 @@
 <meta charset="utf-8" />
 <link rel="stylesheet" href="theme.css" />
 <style>
-  .scene { background: var(--ink); align-items: center; padding: 80px 90px; }
+  .scene { background: var(--ink); align-items: center; padding: 50px 60px; }
   .head { text-align: center; margin-bottom: 30px; }
-  .head h1 { font-family: "Plex Sans"; font-weight: 600; font-size: 36px; margin: 14px 0 0; letter-spacing: -0.01em; }
-  .head h1 .term { font-family: "Plex Mono"; color: var(--accent); font-weight: 500; }
-  .head p { font-family: "Plex Sans"; font-size: 17px; line-height: 1.5; color: var(--text-muted); margin: 16px 0 0; max-width: 620px; }
-  .table { width: 620px; padding: 8px 30px; }
+  .head .eyebrow { display: block; margin-bottom: 10px; }
+  .head h1 { font-family: "Plex Mono"; font-weight: 600; font-size: 66px; margin: 0; color: var(--accent); letter-spacing: -0.01em; }
+  .head p { font-family: "Plex Sans"; font-size: 24px; line-height: 1.4; color: var(--text-muted); margin: 20px 0 0; max-width: 820px; }
+  .table { width: 920px; padding: 4px 0; }
   .row-item {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 0; border-top: 1px solid var(--border);
-    font-family: "Plex Mono"; font-size: 18px; color: var(--text);
+    padding: 16px 0; border-top: 1.5px solid var(--border);
+    font-family: "Plex Mono"; font-size: 27px; color: var(--text);
     opacity: 0; transform: translateY(8px); transition: opacity 240ms ease, transform 240ms ease;
   }
   .row-item.show { opacity: 1; transform: translateY(0); }
@@ -21,33 +21,37 @@
   .row-item .k { color: var(--text-muted); }
   .row-item .v { font-weight: 600; }
   .row-item.highlight {
-    margin: 6px -20px; padding: 16px 20px; border-radius: 10px;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    margin: 14px -28px; padding: 34px 34px; border-radius: 16px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   }
-  .row-item.highlight .k { color: var(--accent); font-weight: 600; }
-  .row-item.highlight .v { color: var(--accent); font-size: 24px; }
+  .row-item.highlight .k { color: var(--accent); font-weight: 600; font-size: 32px; }
+  .row-item.highlight .v { color: var(--accent); font-size: 56px; }
+  .row-item.minor {
+    font-size: 20px; padding: 10px 0; color: var(--text-muted);
+  }
+  .row-item.minor .v { font-weight: 500; color: var(--text-muted); }
   .wire-term {
-    margin-top: 24px; font-family: "Plex Mono"; font-size: 15px; color: var(--text-muted);
+    margin-top: 30px; font-family: "Plex Mono"; font-size: 22px; color: var(--text-muted);
     opacity: 0; transition: opacity 260ms ease;
   }
   .wire-term.show { opacity: 1; }
-  .wire-term code { color: var(--accent); background: var(--ink-2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 9px; }
+  .wire-term code { color: var(--accent); background: var(--ink-3); border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 14px; }
 </style>
 </head>
 <body>
 <div class="scene" id="scene">
   <div class="head">
-    <span class="eyebrow">Comparison semantics</span>
-    <h1>New bucket: <span class="term">not_re_evaluated</span></h1>
+    <span class="eyebrow">New comparison bucket</span>
+    <h1>not_re_evaluated</h1>
     <p>Resolution is confirmed only after the responsible rule is evaluated again.</p>
   </div>
   <div class="table">
     <div class="row-item" data-i="0"><span class="k">New</span><span class="v">1</span></div>
     <div class="row-item" data-i="1"><span class="k">Resolved</span><span class="v">0</span></div>
     <div class="row-item highlight" data-i="2"><span class="k">Not re-evaluated</span><span class="v">8</span></div>
-    <div class="row-item" data-i="3"><span class="k">Changed</span><span class="v">0</span></div>
-    <div class="row-item" data-i="4"><span class="k">Unchanged</span><span class="v">0</span></div>
+    <div class="row-item minor" data-i="3"><span class="k">Changed</span><span class="v">0</span></div>
+    <div class="row-item minor" data-i="4"><span class="k">Unchanged</span><span class="v">0</span></div>
   </div>
   <div class="wire-term" id="wire">Wire field: <code>not_re_evaluated</code></div>
 </div>
@@ -55,9 +59,9 @@
   window.sceneReady = false;
   window.fadeOut = () => document.getElementById('scene').classList.add('fade-out');
   const rows = document.querySelectorAll('.row-item');
-  rows.forEach((r, i) => setTimeout(() => r.classList.add('show'), 200 + i * 180));
-  setTimeout(() => document.getElementById('wire').classList.add('show'), 200 + rows.length * 180 + 200);
-  setTimeout(() => { window.sceneReady = true; }, 200 + rows.length * 180 + 700);
+  rows.forEach((r, i) => setTimeout(() => r.classList.add('show'), 200 + i * 170));
+  setTimeout(() => document.getElementById('wire').classList.add('show'), 200 + rows.length * 170 + 200);
+  setTimeout(() => { window.sceneReady = true; }, 200 + rows.length * 170 + 700);
 </script>
 </body>
 </html>

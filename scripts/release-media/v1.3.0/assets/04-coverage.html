@@ -4,13 +4,13 @@
 <meta charset="utf-8" />
 <link rel="stylesheet" href="theme.css" />
 <style>
-  .scene { background: var(--ink); align-items: center; padding: 80px 90px; }
-  .head { text-align: center; margin-bottom: 34px; }
-  .head h1 { font-family: "Plex Sans"; font-weight: 600; font-size: 36px; margin: 14px 0 0; letter-spacing: -0.01em; }
-  .head p { font-family: "Plex Sans"; font-size: 17px; line-height: 1.5; color: var(--text-muted); margin: 16px 0 0; max-width: 600px; }
-  .panel { width: 600px; padding: 30px 32px; }
+  .scene { background: var(--ink); align-items: center; padding: 50px 60px; }
+  .head { text-align: center; margin-bottom: 44px; }
+  .head h1 { font-family: "Plex Sans"; font-weight: 700; font-size: 62px; margin: 20px 0 0; letter-spacing: -0.01em; }
+  .head p { font-family: "Plex Sans"; font-size: 24px; line-height: 1.4; color: var(--text-muted); margin: 24px 0 0; max-width: 800px; }
+  .panel { width: 920px; padding: 40px 44px; }
   .kv .v.result {
-    font-size: 18px; letter-spacing: 0.04em;
+    font-size: 30px; letter-spacing: 0.03em;
   }
 </style>
 </head>
@@ -21,13 +21,13 @@
     <h1>Coverage that tells the truth</h1>
   </div>
   <div class="panel" id="panel">
-    <div class="kv"><span class="k">Rule execution coverage</span><span class="v pass">Complete</span></div>
+    <div class="kv"><span class="k">Rule execution</span><span class="v pass">Complete</span></div>
     <div class="kv"><span class="k">Kubernetes evidence</span><span class="v pass">Complete</span></div>
     <div class="kv"><span class="k">AWS evidence</span><span class="v warning">Partial</span></div>
-    <div class="kv"><span class="k">Overall decision coverage</span><span class="v warning">Partial</span></div>
+    <div class="kv"><span class="k">Overall decision</span><span class="v warning">Partial</span></div>
     <div class="kv"><span class="k">Result</span><span class="v warning result">INCOMPLETE</span></div>
   </div>
-  <div class="head" style="margin-top: 26px; margin-bottom: 0;">
+  <div class="head" style="margin-top: 34px; margin-bottom: 0;">
     <p>Available findings are scored. Incomplete evidence is disclosed &mdash; not silently dropped.</p>
   </div>
 </div>
