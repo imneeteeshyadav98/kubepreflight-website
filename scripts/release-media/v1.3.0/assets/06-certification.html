@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="theme.css" />
+<style>
+  .scene { background: var(--ink); align-items: center; padding: 80px 90px; }
+  .head { text-align: center; margin-bottom: 32px; }
+  .head h1 { font-family: "Plex Sans"; font-weight: 600; font-size: 34px; margin: 14px 0 0; letter-spacing: -0.01em; }
+  .panel { width: 560px; padding: 28px 32px; }
+  .kv .v.pass { display: inline-flex; align-items: center; gap: 8px; }
+  .kv .v.pass::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--pass); }
+  .footer {
+    margin-top: 24px; text-align: center; font-family: "Plex Mono"; font-size: 14px;
+    color: var(--text-muted); line-height: 1.7;
+    opacity: 0; transition: opacity 280ms ease;
+  }
+  .footer.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="head">
+    <span class="eyebrow">Real-EKS certification</span>
+    <h1>Certified on real Amazon EKS</h1>
+  </div>
+  <div class="panel" id="panel">
+    <div class="kv"><span class="k">Full access</span><span class="v pass">PASS</span></div>
+    <div class="kv"><span class="k">Reduced IAM</span><span class="v pass">PASS</span></div>
+    <div class="kv"><span class="k">Manifests-only</span><span class="v pass">PASS</span></div>
+    <div class="kv"><span class="k">Comparison proof</span><span class="v pass">PASS</span></div>
+  </div>
+  <div class="footer" id="footer">Disposable infrastructure<br />Fully cleaned up after testing</div>
+</div>
+<script>
+  window.sceneReady = false;
+  window.fadeOut = () => document.getElementById('scene').classList.add('fade-out');
+  setTimeout(() => document.getElementById('panel').classList.add('show'), 250);
+  setTimeout(() => document.getElementById('footer').classList.add('show'), 700);
+  setTimeout(() => { window.sceneReady = true; }, 1100);
+</script>
+</body>
+</html>
