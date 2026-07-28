@@ -23,8 +23,8 @@ echo "== 1. MP4 (1080x1080, H.264, faststart) =="
   -an \
   "${OUT}/kubepreflight-v1.3.0-evaluation-coverage.mp4"
 
-echo "== 2. Poster frame (t=6.0s -- not_re_evaluated comparison summary visible) =="
-"${FFMPEG}" -y -ss 6.0 -i "${RAW}" -frames:v 1 -update 1 \
+echo "== 2. Poster frame (t=6.8s -- not_re_evaluated comparison summary, fully settled) =="
+"${FFMPEG}" -y -ss 6.8 -i "${RAW}" -frames:v 1 -update 1 \
   "${OUT}/kubepreflight-v1.3.0-evaluation-coverage-poster.png"
 
 echo "== 3. Primary GIF (highlight cut, 2.0s-10.4s: the problem -> not_re_evaluated -> honest coverage) =="

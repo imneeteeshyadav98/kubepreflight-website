@@ -58,8 +58,8 @@ body {
 
 .eyebrow {
   font-family: "Plex Mono", ui-monospace, monospace;
-  font-size: 15px;
-  letter-spacing: 0.14em;
+  font-size: 26px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent);
 }
@@ -67,20 +67,20 @@ body {
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 10px;
   font-family: "Plex Mono", ui-monospace, monospace;
-  font-size: 15px;
+  font-size: 24px;
   font-weight: 500;
-  letter-spacing: 0.03em;
-  padding: 6px 13px;
+  letter-spacing: 0.02em;
+  padding: 11px 22px;
   border-radius: 100px;
-  border: 1px solid;
+  border: 1.5px solid;
 }
 
 .badge::before {
   content: "";
-  width: 7px;
-  height: 7px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
 }
 
@@ -121,8 +121,8 @@ body {
 }
 
 .panel {
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
   background: var(--ink-2);
   opacity: 0;
   transform: translateY(10px);
@@ -136,11 +136,11 @@ body {
 .kv {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
-  padding: 9px 0;
-  border-top: 1px solid var(--border);
+  gap: 28px;
+  padding: 18px 0;
+  border-top: 1.5px solid var(--border);
   font-family: "Plex Mono", ui-monospace, monospace;
-  font-size: 16px;
+  font-size: 29px;
 }
 .kv:first-of-type {
   border-top: none;
