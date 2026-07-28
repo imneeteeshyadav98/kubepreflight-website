@@ -11,9 +11,12 @@ import { site } from '../content/site';
 const VERSION = site.latestReleaseVersion;
 const DOCKER_TAG = site.latestDockerTag;
 const ACTION_REF = site.latestGitHubActionRef;
-const contextDemoVideo = `/media/kubepreflight-${VERSION}-context-aware-gating.mp4`;
-const contextDemoPoster = `/media/kubepreflight-${VERSION}-context-aware-gating-poster.png`;
-const contextDemoCaptions = `/media/kubepreflight-${VERSION}-context-aware-gating.vtt`;
+// Pinned to the release that was actually recorded, not the current
+// release — see contextAwareGatingDemoVersion in site.ts.
+const DEMO_VERSION = site.contextAwareGatingDemoVersion;
+const contextDemoVideo = `/media/kubepreflight-${DEMO_VERSION}-context-aware-gating.mp4`;
+const contextDemoPoster = `/media/kubepreflight-${DEMO_VERSION}-context-aware-gating-poster.png`;
+const contextDemoCaptions = `/media/kubepreflight-${DEMO_VERSION}-context-aware-gating.vtt`;
 
 const journey = [
   { label: 'Install', href: '#install', detail: 'Binary, Docker, checksums, and release pinning.' },
@@ -459,7 +462,7 @@ const structuredData = {
             playsinline
             preload="metadata"
             poster={contextDemoPoster}
-            aria-label={`KubePreflight ${VERSION} context-aware upgrade gating demo`}
+            aria-label={`KubePreflight ${DEMO_VERSION} context-aware upgrade gating demo`}
           >
             <source
               src={contextDemoVideo}

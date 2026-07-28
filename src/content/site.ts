@@ -1,46 +1,88 @@
-// These three version constants are semantically different and must not be
+// These version constants are semantically different and must not be
 // collapsed into one "current version" — see docs/version-references.md.
 //
 // - latestReleaseVersion: what install/Docker/GitHub Action *example*
 //   commands are pinned to. Tracks new releases automatically.
-// - verifiedEKSReleaseVersion: the release actually validated end-to-end
-//   against a real EKS cluster. "Verified against real EKS upgrades" copy
-//   must use this, not latestReleaseVersion — bump it only when a new
-//   real-EKS validation ships, never automatically.
+// - verifiedEKSReleaseVersion: the most recent release actually validated
+//   end-to-end against a real, disposable EKS cluster. "Verified against
+//   real EKS upgrades" copy must use this, not latestReleaseVersion — bump
+//   it only when a new real-EKS validation ships, never automatically.
 // - caseStudyVersion: the exact release that produced the EKS 1.31 -> 1.32
 //   case-study evidence. Permanently pinned to that evidence capture; never
-//   rewrite it just to match the other two constants.
+//   rewrite it just to match the other constants.
+// - secTrust002ReleaseVersion: the exact release the SEC-TRUST-002 live-EKS
+//   validation narrative and its embedded video are about. Historically
+//   this was the same value as verifiedEKSReleaseVersion (both were v1.0.0),
+//   but the two claims are different — "the SEC-TRUST-002 story happened on
+//   this release" versus "this is the most recently validated release" —
+//   and they diverge the moment a later release gets its own real-EKS
+//   validation. Keep this pinned to v1.0.0 permanently; never move it to
+//   follow verifiedEKSReleaseVersion.
+// - contextAwareGatingDemoVersion: the exact release whose recorded demo
+//   media (/media/kubepreflight-<version>-context-aware-gating.*) is on
+//   disk. Permanently pinned to that capture; never derived from
+//   latestReleaseVersion, or the demo asset paths silently 404 on every
+//   release that doesn't re-record the same feature demo.
 //
-// v1.1.0 is the current public release. v1.0.0 remains the latest release
-// with real-EKS validation: SEC-TRUST-002 ran scan/plan/compare/rollback
-// assessment for the released binary and digest-pinned container against a
-// real disposable EKS cluster. The artifacts actually exercised live were
-// tagged v1.0.0-rc.1 (which that run caught a real rollback bug in) and
-// v1.0.0-rc.2 (clean); v1.0.0 ships that exact product code unchanged --
-// see /case-study/eks-1-31-to-1-32 for how the two relate. v1.1.0 adds
+// v1.3.0 is the current public release ("Evidence Integrity and Evaluation
+// Semantics"): native applicability/execution tracking for all 31 rules,
+// findings schema 1.1 with backward-compatible legacy 1.0 normalization, a
+// not_re_evaluated comparison bucket that stops a disappeared finding from
+// being misread as resolved, and combined rule-execution/evidence-plane
+// decision coverage. It was certified against a real, disposable Amazon EKS
+// cluster across full-access, reduced-IAM, and manifests-only modes, so
+// verifiedEKSReleaseVersion moves to v1.3.0 with it. v1.1.0 added
 // context-aware upgrade gating and was release-locked with isolated Kind,
-// published-artifact, and GHCR verification. v0.14.0 remains pinned as the
-// EKS 1.31 -> 1.32 case-study evidence release specifically; it is a
-// separate, earlier fact from SEC-TRUST-002 and must not be conflated with
-// either v1.0.0 or v1.1.0.
+// published-artifact, and GHCR verification; its demo capture is preserved
+// via contextAwareGatingDemoVersion, independent of the current release.
+// v1.0.0 remains the fixed SEC-TRUST-002 story (see secTrust002ReleaseVersion
+// above): scan/plan/compare/rollback assessment run for the released binary
+// and digest-pinned container against a real disposable EKS cluster. The
+// artifacts actually exercised live were tagged v1.0.0-rc.1 (which that run
+// caught a real rollback bug in) and v1.0.0-rc.2 (clean); v1.0.0 shipped
+// that exact product code unchanged -- see /case-study/eks-1-31-to-1-32 for
+// how the two relate. v0.14.0 remains pinned as the EKS 1.31 -> 1.32
+// case-study evidence release specifically; it is a separate, earlier fact
+// from SEC-TRUST-002 and must not be conflated with v1.0.0, v1.1.0, or
+// v1.3.0.
 
 // Tracks new releases. Set via PUBLIC_KUBEPREFLIGHT_VERSION (see
 // .env.example) so a future release only needs an env var change +
 // redeploy — never a source edit. Falls back to the last release wired in
 // here if the env var isn't set, so local dev and CI never break silently.
-const latestReleaseVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v1.1.0';
+const latestReleaseVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v1.3.0';
 
 // Fixed historical facts, deliberately NOT env-driven — see comment above.
-const verifiedEKSReleaseVersion = 'v1.0.0';
+const verifiedEKSReleaseVersion = 'v1.3.0';
 const caseStudyVersion = 'v0.14.0';
+const secTrust002ReleaseVersion = 'v1.0.0';
+const contextAwareGatingDemoVersion = 'v1.1.0';
 // SEC-TRUST-002: the RC where the live-EKS run found a real product bug,
 // and the RC it re-verified clean against afterward. Fixed historical
-// facts like caseStudyVersion above — the story of how verifiedEKSReleaseVersion
+// facts like caseStudyVersion above — the story of how secTrust002ReleaseVersion
 // got its proof, not something that moves with new releases.
 const secTrust002BugFoundVersion = 'v1.0.0-rc.1';
 const secTrust002VerifiedCleanVersion = 'v1.0.0-rc.2';
 const latestDockerTag = latestReleaseVersion.replace(/^v/, '');
 const latestGitHubActionRef = latestReleaseVersion;
+const repositoryOwner = 'imneeteeshyadav98';
+const repositoryName = 'kubepreflight';
+// Deep link to the current release's GitHub Releases entry. Derived from
+// latestReleaseVersion so it never drifts out of sync with the tag it
+// points to.
+const latestReleaseUrl = `https://github.com/${repositoryOwner}/${repositoryName}/releases/tag/${latestReleaseVersion}`;
+
+// Verified capability claims for the current release, used by the homepage
+// release-announcement card. Keep this list to what the release actually
+// shipped and what certification actually confirmed — see
+// docs/version-references.md before editing.
+const latestReleaseHighlights = [
+  'Native applicability and execution-state tracking for all 31 rules',
+  'Findings schema upgraded to 1.1, with backward-compatible legacy 1.0 normalization',
+  "New not_re_evaluated comparison bucket — a disappeared finding is never read as resolved unless its rule actually ran again",
+  'Combined rule-execution and evidence-plane decision coverage, so reduced access can no longer look like a clean pass',
+  'Certified on disposable Amazon EKS infrastructure across full-access, reduced-IAM, and manifests-only modes'
+];
 
 export const site = {
   name: 'KubePreflight',
@@ -64,16 +106,20 @@ export const site = {
   // Derived, not a second env var, so the two can never drift out of sync.
   latestDockerTag,
   latestGitHubActionRef,
+  latestReleaseUrl,
+  latestReleaseHighlights,
   verifiedEKSReleaseVersion,
   caseStudyVersion,
+  secTrust002ReleaseVersion,
+  contextAwareGatingDemoVersion,
   secTrust002BugFoundVersion,
   secTrust002VerifiedCleanVersion,
   releaseFeatures: {
     supportsVersionCommand: true,
     supportsRedaction: true
   },
-  repositoryOwner: 'imneeteeshyadav98',
-  repositoryName: 'kubepreflight',
+  repositoryOwner,
+  repositoryName,
   ogImage: '/og/default.svg',
   locale: 'en-US',
   twitterHandle: undefined as string | undefined
