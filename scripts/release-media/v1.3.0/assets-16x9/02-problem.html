@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../assets/theme.css" />
+<style>
+  html, body, .scene { width: 1920px; height: 1080px; }
+  .scene { background: var(--ink); align-items: center; padding: 60px 70px; }
+  .head { text-align: center; margin-bottom: 54px; }
+  .head h1 {
+    font-family: "Plex Sans"; font-weight: 700; font-size: 80px; margin: 20px 0 0;
+    letter-spacing: -0.015em;
+  }
+  .head h1 .neq { color: var(--blocker); font-family: "Plex Mono"; }
+  .head p {
+    font-family: "Plex Sans"; font-size: 30px; line-height: 1.45; color: var(--text-muted);
+    margin: 26px 0 0; max-width: 1100px;
+  }
+  .row { display: flex; align-items: center; gap: 80px; margin-top: 60px; }
+  .panel {
+    width: 520px; padding: 40px 44px;
+  }
+  .panel .label { font-family: "Plex Mono"; font-size: 21px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 22px; }
+  .panel .id { font-family: "Plex Mono"; font-size: 34px; color: var(--text); font-weight: 600; margin-bottom: 18px; }
+  .arrow { color: var(--text-muted); font-size: 48px; opacity: 0; transition: opacity 260ms ease; }
+  .arrow.show { opacity: 1; }
+  #panel-a { opacity: 0; transform: translateX(-16px); transition: opacity 260ms ease, transform 260ms ease; }
+  #panel-a.show { opacity: 1; transform: translateX(0); }
+  #panel-b { opacity: 0; transform: translateX(16px); transition: opacity 260ms ease, transform 260ms ease; }
+  #panel-b.show { opacity: 1; transform: translateX(0); }
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="head">
+    <span class="eyebrow">The problem</span>
+    <h1>Missing <span class="neq">&ne;</span> Resolved</h1>
+    <p>A finding may disappear because its rule was not re-evaluated.</p>
+  </div>
+  <div class="row">
+    <div class="panel" id="panel-a">
+      <div class="label">Baseline scan</div>
+      <div class="id">WH-005</div>
+      <span class="badge warning">Warning</span>
+    </div>
+    <div class="arrow" id="arrow">&#8594;</div>
+    <div class="panel" id="panel-b">
+      <div class="label">Current scan</div>
+      <div class="id">WH-005</div>
+      <span class="badge accent">Rule not evaluated</span>
+    </div>
+  </div>
+</div>
+<script>
+  window.sceneReady = false;
+  window.fadeOut = () => document.getElementById('scene').classList.add('fade-out');
+  setTimeout(() => document.getElementById('panel-a').classList.add('show'), 250);
+  setTimeout(() => document.getElementById('arrow').classList.add('show'), 650);
+  setTimeout(() => document.getElementById('panel-b').classList.add('show'), 900);
+  setTimeout(() => { window.sceneReady = true; }, 1500);
+</script>
+</body>
+</html>
