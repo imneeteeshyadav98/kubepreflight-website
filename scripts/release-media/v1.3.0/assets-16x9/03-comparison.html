@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../assets/theme.css" />
+<style>
+  html, body, .scene { width: 1920px; height: 1080px; }
+  .scene { background: var(--ink); align-items: center; justify-content: center; padding: 0 100px; }
+  .layout { display: flex; align-items: center; gap: 90px; width: 100%; max-width: 1720px; }
+  .left { width: 680px; flex: none; }
+  .left .eyebrow { display: block; margin-bottom: 22px; }
+  .left h1 { font-family: "Plex Sans"; font-weight: 600; font-size: 44px; margin: 0 0 14px; color: var(--text-muted); }
+  .left .code { font-family: "Plex Mono"; font-weight: 600; font-size: 66px; color: var(--accent); line-height: 1.15; word-break: break-word; }
+  .left p { font-family: "Plex Sans"; font-size: 26px; line-height: 1.5; color: var(--text-muted); margin: 28px 0 0; }
+  .left .wire-term {
+    margin-top: 30px; font-family: "Plex Mono"; font-size: 20px; color: var(--text-muted);
+  }
+  .left .wire-term code { color: var(--accent); background: var(--ink-3); border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 14px; }
+  .right { flex: 1; }
+  .row-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 0; border-top: 1.5px solid var(--border);
+    font-family: "Plex Mono"; font-size: 28px; color: var(--text);
+    opacity: 0; transform: translateY(8px); transition: opacity 240ms ease, transform 240ms ease;
+  }
+  .row-item.show { opacity: 1; transform: translateY(0); }
+  .row-item:first-of-type { border-top: none; }
+  .row-item .k { color: var(--text-muted); }
+  .row-item .v { font-weight: 600; }
+  .row-item.highlight {
+    margin: 16px 0; padding: 38px 40px; border-radius: 18px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  .row-item.highlight .k { color: var(--accent); font-weight: 600; font-size: 34px; }
+  .row-item.highlight .v { color: var(--accent); font-size: 60px; }
+  .row-item.minor {
+    font-size: 21px; padding: 11px 0; color: var(--text-muted);
+  }
+  .row-item.minor .v { font-weight: 500; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="layout">
+    <div class="left">
+      <span class="eyebrow">Comparison semantics</span>
+      <h1>New bucket:</h1>
+      <div class="code">not_re_evaluated</div>
+      <p>Resolution is confirmed only after the responsible rule is evaluated again.</p>
+      <div class="wire-term">Wire field: <code>not_re_evaluated</code></div>
+    </div>
+    <div class="right">
+      <div class="row-item" data-i="0"><span class="k">New</span><span class="v">1</span></div>
+      <div class="row-item" data-i="1"><span class="k">Resolved</span><span class="v">0</span></div>
+      <div class="row-item highlight" data-i="2"><span class="k">Not re-evaluated</span><span class="v">8</span></div>
+      <div class="row-item minor" data-i="3"><span class="k">Changed</span><span class="v">0</span></div>
+      <div class="row-item minor" data-i="4"><span class="k">Unchanged</span><span class="v">0</span></div>
+    </div>
+  </div>
+</div>
+<script>
+  window.sceneReady = false;
+  window.fadeOut = () => document.getElementById('scene').classList.add('fade-out');
+  const rows = document.querySelectorAll('.row-item');
+  rows.forEach((r, i) => setTimeout(() => r.classList.add('show'), 200 + i * 170));
+  setTimeout(() => { window.sceneReady = true; }, 200 + rows.length * 170 + 500);
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../assets/theme.css" />
+<style>
+  html, body, .scene { width: 1920px; height: 1080px; }
+  .scene { background: var(--ink); align-items: center; padding: 50px 60px; }
+  .head { text-align: center; margin-bottom: 46px; }
+  .head h1 { font-family: "Plex Sans"; font-weight: 700; font-size: 64px; margin: 20px 0 0; letter-spacing: -0.01em; }
+  .head p { font-family: "Plex Sans"; font-size: 26px; line-height: 1.4; color: var(--text-muted); margin: 26px 0 0; max-width: 1100px; }
+  .panel { width: 1400px; padding: 44px 56px; }
+  .kv { font-size: 32px; }
+  .kv .v.result {
+    font-size: 34px; letter-spacing: 0.03em;
+  }
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="head">
+    <span class="eyebrow">Evaluation coverage</span>
+    <h1>Coverage that tells the truth</h1>
+  </div>
+  <div class="panel" id="panel">
+    <div class="kv"><span class="k">Rule execution</span><span class="v pass">Complete</span></div>
+    <div class="kv"><span class="k">Kubernetes evidence</span><span class="v pass">Complete</span></div>
+    <div class="kv"><span class="k">AWS evidence</span><span class="v warning">Partial</span></div>
+    <div class="kv"><span class="k">Overall decision</span><span class="v warning">Partial</span></div>
+    <div class="kv"><span class="k">Result</span><span class="v warning result">INCOMPLETE</span></div>
+  </div>
+  <div class="head" style="margin-top: 36px; margin-bottom: 0;">
+    <p>Available findings are scored. Incomplete evidence is disclosed &mdash; not silently dropped.</p>
+  </div>
+</div>
+<script>
+  window.sceneReady = false;
+  window.fadeOut = () => document.getElementById('scene').classList.add('fade-out');
+  setTimeout(() => document.getElementById('panel').classList.add('show'), 250);
+  setTimeout(() => { window.sceneReady = true; }, 900);
+</script>
+</body>
+</html>

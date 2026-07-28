@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../assets/theme.css" />
+<style>
+  html, body, .scene { width: 1920px; height: 1080px; }
+  .scene { background: var(--ink); align-items: center; padding: 50px 60px; }
+  .head { text-align: center; margin-bottom: 60px; }
+  .head h1 { font-family: "Plex Sans"; font-weight: 700; font-size: 62px; margin: 20px 0 0; letter-spacing: -0.01em; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 34px; width: 1600px; }
+  .card {
+    padding: 52px 10px; text-align: center;
+    opacity: 0; transform: scale(0.94); transition: opacity 240ms ease, transform 240ms ease;
+  }
+  .card.show { opacity: 1; transform: scale(1); }
+  .card .icon { font-family: "Plex Mono"; font-size: 42px; color: var(--accent); margin-bottom: 20px; }
+  .card .name { font-family: "Plex Sans"; font-weight: 600; font-size: 36px; color: var(--text); }
+  .support {
+    margin-top: 60px; text-align: center; font-family: "Plex Mono"; font-size: 28px;
+    color: var(--text-muted); line-height: 1.6;
+    opacity: 0; transition: opacity 280ms ease;
+  }
+  .support.show { opacity: 1; }
+  .support .accent { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="head">
+    <span class="eyebrow">Same evidence, every surface</span>
+    <h1>Consistent across every surface</h1>
+  </div>
+  <div class="grid">
+    <div class="card" data-i="0"><div class="icon">&gt;_</div><div class="name">Terminal</div></div>
+    <div class="card" data-i="1"><div class="icon">#</div><div class="name">Markdown</div></div>
+    <div class="card" data-i="2"><div class="icon">&lt;/&gt;</div><div class="name">HTML</div></div>
+    <div class="card" data-i="3"><div class="icon">&#9635;</div><div class="name">Console</div></div>
+  </div>
+  <div class="support" id="support">31 rules &middot; <span class="accent">Native execution metadata</span> &middot; Findings schema <span class="accent">1.1</span></div>
+</div>
+<script>
+  window.sceneReady = false;
+  window.fadeOut = () => document.getElementById('scene').classList.add('fade-out');
+  const cards = document.querySelectorAll('.card');
+  cards.forEach((c, i) => setTimeout(() => c.classList.add('show'), 200 + i * 160));
+  setTimeout(() => document.getElementById('support').classList.add('show'), 200 + cards.length * 160 + 150);
+  setTimeout(() => { window.sceneReady = true; }, 200 + cards.length * 160 + 650);
+</script>
+</body>
+</html>
