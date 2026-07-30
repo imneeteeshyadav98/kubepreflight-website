@@ -12,6 +12,7 @@ export const primaryNav: readonly NavItem[] = [
   { label: 'Use cases', href: '/use-cases' },
   { label: 'GitHub Action', href: '/github-action' },
   { label: 'Case study', href: '/case-study/eks-1-31-to-1-32' },
+  { label: 'Releases', href: '/releases' },
   { label: 'Security', href: '/security' }
 ];
 
@@ -28,6 +29,7 @@ export const footerColumns: readonly FooterColumn[] = [
       { label: 'Install', href: '/install' },
       { label: 'Use cases', href: '/use-cases' },
       { label: 'GitHub Action', href: '/github-action' },
+      { label: 'Releases', href: '/releases' },
       { label: 'Security', href: '/security' }
     ]
   },

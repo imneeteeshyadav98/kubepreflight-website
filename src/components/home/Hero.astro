@@ -10,8 +10,8 @@ import { site } from '../../content/site';
   <Container class="grid grid-cols-1 gap-16 py-24 md:grid-cols-12 md:py-32">
       <div class="md:col-span-8">
       <div class="flex flex-wrap gap-3">
-        <Badge tone="signal">KubePreflight {site.latestReleaseVersion} &middot; evidence integrity and evaluation semantics</Badge>
-        <Badge tone="neutral">{site.verifiedEKSReleaseVersion} verified against real EKS upgrades</Badge>
+        <Badge tone="signal">Latest release: {site.latestReleaseVersion}</Badge>
+        <Badge tone="neutral">Certification-driven redaction and RBAC hardening</Badge>
       </div>
 
       <h1 class="mt-6 font-editorial text-4xl leading-[1.12] text-text-primary sm:text-5xl lg:text-[3.5rem]">
@@ -34,7 +34,7 @@ import { site } from '../../content/site';
 
       <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
         <Button href="/install">Run your first scan</Button>
-        <Button href="/case-study/eks-1-31-to-1-32" variant="secondary">View real EKS case study</Button>
+        <Button href={site.latestReleaseUrl} variant="secondary" external>View {site.latestReleaseVersion} release</Button>
         <IconLink href={site.githubUrl} icon="github" external>
           GitHub
         </IconLink>
