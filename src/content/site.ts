@@ -24,17 +24,23 @@
 //   latestReleaseVersion, or the demo asset paths silently 404 on every
 //   release that doesn't re-record the same feature demo.
 //
-// v1.3.0 is the current public release ("Evidence Integrity and Evaluation
-// Semantics"): native applicability/execution tracking for all 31 rules,
-// findings schema 1.1 with backward-compatible legacy 1.0 normalization, a
-// not_re_evaluated comparison bucket that stops a disappeared finding from
-// being misread as resolved, and combined rule-execution/evidence-plane
-// decision coverage. It was certified against a real, disposable Amazon EKS
-// cluster across full-access, reduced-IAM, and manifests-only modes, so
-// verifiedEKSReleaseVersion moves to v1.3.0 with it. v1.1.0 added
-// context-aware upgrade gating and was release-locked with isolated Kind,
-// published-artifact, and GHCR verification; its demo capture is preserved
-// via contextAwareGatingDemoVersion, independent of the current release.
+// v1.3.1 is the current public release: a certification-driven patch for
+// safer evidence sharing and documented least-privilege Kubernetes access.
+// Redaction was re-verified against real EKS-derived evidence and the
+// documented Kubernetes RBAC role was verified on a disposable Kind cluster,
+// so verifiedEKSReleaseVersion moves to v1.3.1 with it.
+//
+// v1.3.0 remains a historical feature release ("Evidence Integrity and
+// Evaluation Semantics"): native applicability/execution tracking for all 31
+// rules, findings schema 1.1 with backward-compatible legacy 1.0
+// normalization, a not_re_evaluated comparison bucket that stops a
+// disappeared finding from being misread as resolved, and combined
+// rule-execution/evidence-plane decision coverage. It was certified against a
+// real, disposable Amazon EKS cluster across full-access, reduced-IAM, and
+// manifests-only modes. v1.1.0 added context-aware upgrade gating and was
+// release-locked with isolated Kind, published-artifact, and GHCR
+// verification; its demo capture is preserved via
+// contextAwareGatingDemoVersion, independent of the current release.
 // v1.0.0 remains the fixed SEC-TRUST-002 story (see secTrust002ReleaseVersion
 // above): scan/plan/compare/rollback assessment run for the released binary
 // and digest-pinned container against a real disposable EKS cluster. The
@@ -44,16 +50,16 @@
 // how the two relate. v0.14.0 remains pinned as the EKS 1.31 -> 1.32
 // case-study evidence release specifically; it is a separate, earlier fact
 // from SEC-TRUST-002 and must not be conflated with v1.0.0, v1.1.0, or
-// v1.3.0.
+// v1.3.0, or v1.3.1.
 
 // Tracks new releases. Set via PUBLIC_KUBEPREFLIGHT_VERSION (see
 // .env.example) so a future release only needs an env var change +
 // redeploy — never a source edit. Falls back to the last release wired in
 // here if the env var isn't set, so local dev and CI never break silently.
-const latestReleaseVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v1.3.0';
+const latestReleaseVersion = import.meta.env.PUBLIC_KUBEPREFLIGHT_VERSION?.trim() || 'v1.3.1';
 
 // Fixed historical facts, deliberately NOT env-driven — see comment above.
-const verifiedEKSReleaseVersion = 'v1.3.0';
+const verifiedEKSReleaseVersion = 'v1.3.1';
 const caseStudyVersion = 'v0.14.0';
 const secTrust002ReleaseVersion = 'v1.0.0';
 const contextAwareGatingDemoVersion = 'v1.1.0';
@@ -77,12 +83,48 @@ const latestReleaseUrl = `https://github.com/${repositoryOwner}/${repositoryName
 // shipped and what certification actually confirmed — see
 // docs/version-references.md before editing.
 const latestReleaseHighlights = [
-  'Native applicability and execution-state tracking for all 31 rules',
-  'Findings schema upgraded to 1.1, with backward-compatible legacy 1.0 normalization',
-  "New not_re_evaluated comparison bucket — a disappeared finding is never read as resolved unless its rule actually ran again",
-  'Combined rule-execution and evidence-plane decision coverage, so reduced access can no longer look like a clean pass',
-  'Certified on disposable Amazon EKS infrastructure across full-access, reduced-IAM, and manifests-only modes'
+  'Redacts sensitive identifiers consistently across terminal, JSON, Markdown, HTML, compare, and rollback output',
+  'Adds redaction for AWS infrastructure identifiers, endpoints, hostnames, IPs, tokens, and local paths',
+  'Complete read-only Kubernetes-plane evidence coverage using the documented role',
+  'Preserves rule semantics, schemas, fingerprints, scores, gates, rollback recommendations, and exit codes'
 ];
+
+const latestReleaseSummary =
+  'A certification-driven patch release focused on safer evidence sharing and least-privilege Kubernetes access.';
+const latestReleaseVerification =
+  'The redaction fixes are verified against a real Amazon EKS environment. Kubernetes RBAC coverage is verified on a disposable Kind cluster.';
+const readOnlyReleaseClaim =
+  'KubePreflight remains fully read-only and does not execute upgrades, rollbacks, remediation, or cluster mutations.';
+
+const releaseHistory = [
+  {
+    version: 'v1.3.1',
+    title: 'Redaction and documented RBAC certification fixes',
+    summary: latestReleaseSummary,
+    highlights: latestReleaseHighlights,
+    verification: latestReleaseVerification,
+    readOnlyClaim: readOnlyReleaseClaim,
+    url: `https://github.com/${repositoryOwner}/${repositoryName}/releases/tag/v1.3.1`,
+    current: true
+  },
+  {
+    version: 'v1.3.0',
+    title: 'Rule execution evidence and evaluation coverage',
+    summary:
+      'Evidence integrity feature release for rule applicability, execution-state tracking, findings schema 1.1, the not_re_evaluated comparison bucket, and combined rule-execution/evidence-plane decision coverage.',
+    highlights: [
+      'Native applicability and execution-state tracking for all 31 rules',
+      'Findings schema 1.1 with backward-compatible legacy 1.0 normalization',
+      'not_re_evaluated comparison bucket for findings whose rules did not rerun',
+      'Certified on disposable Amazon EKS infrastructure across full-access, reduced-IAM, and manifests-only modes'
+    ],
+    verification:
+      'The v1.3.0 evidence release remains part of release history; v1.3.1 is the safer patch available now.',
+    readOnlyClaim: undefined,
+    url: `https://github.com/${repositoryOwner}/${repositoryName}/releases/tag/v1.3.0`,
+    current: false
+  }
+] as const;
 
 export const site = {
   name: 'KubePreflight',
@@ -108,6 +150,10 @@ export const site = {
   latestGitHubActionRef,
   latestReleaseUrl,
   latestReleaseHighlights,
+  latestReleaseSummary,
+  latestReleaseVerification,
+  readOnlyReleaseClaim,
+  releaseHistory,
   verifiedEKSReleaseVersion,
   caseStudyVersion,
   secTrust002ReleaseVersion,

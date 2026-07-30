@@ -8,11 +8,9 @@ import Button from '../ui/Button.astro';
 import IconLink from '../ui/IconLink.astro';
 import { site } from '../../content/site';
 
-// Expected v1.3.0 demo asset paths, following the same naming convention as
-// contextAwareGatingDemoVersion's recording. Not yet generated — until the
-// files land in public/media/, this section renders text-only (no video
-// container, no public "coming soon" placeholder). Media appears
-// automatically on the next build once both files exist.
+// Patch releases do not always ship fresh media. Until matching files land
+// in public/media/, this section renders text-only with no public placeholder.
+// Media appears automatically on the next build once both files exist.
 const demoVideoPath = `/media/kubepreflight-${site.latestReleaseVersion}-evaluation-coverage.mp4`;
 const demoPosterPath = `/media/kubepreflight-${site.latestReleaseVersion}-evaluation-coverage-poster.png`;
 const hasReleaseMedia =
@@ -30,12 +28,11 @@ const hasReleaseMedia =
         </div>
 
         <h2 class="mt-4 font-editorial text-3xl leading-[1.15] text-text-primary sm:text-4xl">
-          KubePreflight {site.latestReleaseVersion} — Evidence Integrity and Evaluation Semantics.
+          KubePreflight {site.latestReleaseVersion}
         </h2>
 
         <p class="mt-4 leading-relaxed text-text-muted">
-          Know which checks actually ran, distinguish missing evidence from resolution, and audit
-          upgrade-readiness decisions across full-access, reduced-IAM, and manifests-only scans.
+          {site.latestReleaseSummary}
         </p>
 
         <ul class="mt-6 flex flex-col gap-3">
@@ -51,9 +48,17 @@ const hasReleaseMedia =
           }
         </ul>
 
+        <p class="mt-6 text-sm leading-relaxed text-text-muted">
+          {site.latestReleaseVerification}
+        </p>
+
+        <p class="mt-3 text-sm leading-relaxed text-text-muted">
+          {site.readOnlyReleaseClaim}
+        </p>
+
         <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-          <Button href={site.latestReleaseUrl} external>Explore {site.latestReleaseVersion}</Button>
-          <IconLink href="/case-study/eks-1-31-to-1-32">See the real-EKS certification</IconLink>
+          <Button href={site.latestReleaseUrl} external>View {site.latestReleaseVersion} release</Button>
+          <IconLink href="/releases">Release history</IconLink>
         </div>
       </div>
 
